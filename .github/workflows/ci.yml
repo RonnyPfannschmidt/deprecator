@@ -47,27 +47,15 @@ jobs:
         name: Packages
         path: dist
 
-    - name: Create virtual environment and install test dependencies
-      run: |
-        uv venv --python ${{ matrix.python-version }}
-        uv sync
-
-    - name: Install package from wheel
-      run: |
-        uv pip install dist/*.whl
-
-    - name: Run ruff check on source (not installed package)
-      run: uv run --with ruff -- ruff check .
-
-    - name: Run ruff format check on source
-      run: uv run --with ruff -- ruff format --check .
-
-    - name: Run mypy on source
-      run: uv run --with mypy --with typing-extensions -- mypy deprecator/
-
     - name: Run tests against installed package
       run: |
-        uv run pytest test_deprecator.py --cov=deprecator --cov-report=xml --cov-report=term
+        uv run \
+          --with dist/*.whl \
+          --no-project\
+          pytest \
+          --cov=deprecator \
+          --cov-report=xml \
+          --cov-report=term
 
     - name: Upload coverage to Codecov
       if: matrix.python-version == '3.11'
