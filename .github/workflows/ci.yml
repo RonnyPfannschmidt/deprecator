@@ -18,13 +18,6 @@ jobs:
         fetch-depth: 0  # Needed for setuptools_scm
 
     - uses: hynek/build-and-inspect-python-package@v2
-      id: baipp
-
-    - name: Show package info
-      run: |
-        echo "Package name: ${{ steps.baipp.outputs.package-name }}"
-        echo "Package version: ${{ steps.baipp.outputs.package-version }}"
-        echo "Artifact name: ${{ steps.baipp.outputs.artifact-name }}"
 
   test:
     name: Test Python ${{ matrix.python-version }}
@@ -51,7 +44,7 @@ jobs:
     - name: Download built packages
       uses: actions/download-artifact@v4
       with:
-        name: ${{ needs.build-and-inspect.outputs.artifact-name }}
+        name: Packages
         path: dist
 
     - name: Create virtual environment and install test dependencies
