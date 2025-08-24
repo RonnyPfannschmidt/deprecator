@@ -1,7 +1,7 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 
-requires = [ "setuptools>=64", "setuptools-scm>=9" ]
+requires = [ "setuptools>=75", "setuptools-scm>=9" ]
 
 [project]
 name = "deprecator"
@@ -17,33 +17,14 @@ authors = [
 ]
 requires-python = ">=3.10"
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
-  "Intended Audience :: Customer Service",
+  "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "Intended Audience :: Education",
-  "Intended Audience :: End Users/Desktop",
-  "Intended Audience :: Financial and Insurance Industry",
-  "Intended Audience :: Healthcare Industry",
-  "Intended Audience :: Information Technology",
-  "Intended Audience :: Legal Industry",
-  "Intended Audience :: Manufacturing",
-  "Intended Audience :: Other Audience",
-  "Intended Audience :: Science/Research",
-  "Intended Audience :: System Administrators",
-  "Intended Audience :: Telecommunications Industry",
-  "Operating System :: MacOS :: MacOS X",
-  "Operating System :: Microsoft :: Windows",
-  "Operating System :: OS Independent",
-  "Operating System :: POSIX",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Software Development",
-  "Topic :: Software Development :: Localization",
-  "Topic :: Software Development :: Quality Assurance",
-  "Topic :: Software Development :: Testing",
   "Topic :: Utilities",
 ]
 
@@ -68,22 +49,21 @@ test = [
 packages = [ "deprecator" ]
 
 [tool.ruff]
-target-version = "py38"
-line-length = 88
-
-format.indent-style = "space"
-format.quote-style = "double"
-format.line-ending = "auto"
-format.skip-magic-trailing-comma = false
-lint.select = [
-  "B",  # flake8-bugbear
-  "C",  # flake8-comprehensions
-  "E",  # pycodestyle errors
-  "F",  # pyflakes
-  "I",  # isort
-  "UP", # pyupgrade
-  "W",  # pycodestyle warnings
+lint.extend-select = [
+  "B",   # flake8-bugbear
+  "C",   # flake8-comprehensions
+  "C90",
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "G",
+  "I",   # isort
+  "LOG",
+  "RUF",
+  "SIM",
+  "UP",  # pyupgrade
+  "W",   # pycodestyle warnings
 ]
+format.line-ending = "lf"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
