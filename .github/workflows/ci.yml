@@ -18,6 +18,11 @@ jobs:
         fetch-depth: 0  # Needed for setuptools_scm
 
     - uses: hynek/build-and-inspect-python-package@v2
+      id: baipp
+
+    outputs:
+      package-version: ${{ steps.baipp.outputs.package_version }}
+      python-versions: ${{ steps.baipp.outputs.supported_python_classifiers_json_array }}
 
   test:
     name: Test Python ${{ matrix.python-version }}
@@ -26,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version:  ${{ fromJson(needs.build-and-inspect.outputs.python-versions) }}
 
     steps:
     - uses: actions/checkout@v4
@@ -35,6 +40,7 @@ jobs:
       with:
         version: "latest"
         python-version: ${{ matrix.python-version }}
+        enable-cache: true
 
     - name: Download built packages
       uses: actions/download-artifact@v4
