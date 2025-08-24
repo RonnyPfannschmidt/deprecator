@@ -1,98 +1,116 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm>=9"]
 build-backend = "setuptools.build_meta"
+
+requires = [ "setuptools>=64", "setuptools-scm>=9" ]
 
 [project]
 name = "deprecator"
 description = "Deprecator provides a decorator to easily depreate old code."
-authors = [
-    {name = "Anthony Long", email = "antlong@gmail.com"}
-]
-maintainers = [
-    {name = "Ronny Pfannschmidt", email = "opensource@ronnypfannschmidt.de"}
-]
-license = {text = "Apache 2.0"}
-requires-python = ">=3.10"
 readme = "README.rst"
-keywords = ["deprecation", "deprecate", "warning", "warn", "decorator"]
-dynamic = ["version"]
+keywords = [ "decorator", "deprecate", "deprecation", "warn", "warning" ]
+license = { text = "Apache 2.0" }
+maintainers = [
+  { name = "Ronny Pfannschmidt", email = "opensource@ronnypfannschmidt.de" },
+]
+authors = [
+  { name = "Anthony Long", email = "antlong@gmail.com" },
+]
+requires-python = ">=3.10"
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Customer Service",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Education",
-    "Intended Audience :: End Users/Desktop",
-    "Intended Audience :: Financial and Insurance Industry",
-    "Intended Audience :: Healthcare Industry",
-    "Intended Audience :: Information Technology",
-    "Intended Audience :: Legal Industry",
-    "Intended Audience :: Manufacturing",
-    "Intended Audience :: Other Audience",
-    "Intended Audience :: Science/Research",
-    "Intended Audience :: System Administrators",
-    "Intended Audience :: Telecommunications Industry",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.3",
-    "Programming Language :: Python :: 2.4",
-    "Programming Language :: Python :: 2.5",
-    "Programming Language :: Python :: 2.6",
-    "Programming Language :: Python :: 2.7",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.1",
-    "Programming Language :: Python :: 3.2",
-    "Programming Language :: Python :: 3.3",
-    "Programming Language :: Python :: 3.4",
-    "Topic :: Software Development",
-    "Topic :: Software Development :: Localization",
-    "Topic :: Software Development :: Quality Assurance",
-    "Topic :: Software Development :: Testing",
-    "Topic :: Utilities",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Customer Service",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Intended Audience :: Healthcare Industry",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: Legal Industry",
+  "Intended Audience :: Manufacturing",
+  "Intended Audience :: Other Audience",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Telecommunications Industry",
+  "Operating System :: MacOS :: MacOS X",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: OS Independent",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Localization",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Utilities",
 ]
 
-[project.urls]
-Homepage = "http://github.com/antlong/deprecator"
-
-[tool.setuptools]
-packages = ["deprecator"]
+dynamic = [ "version" ]
+urls.Homepage = "http://github.com/antlong/deprecator"
 
 [dependency-groups]
-test = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-]
 dev = [
-    "pre-commit>=3.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0",
-    "build>=0.10",
-    "twine>=4.0",
-    "typing-extensions>=4.0",
+  "build>=0.10",
+  "mypy>=1",
+  "pre-commit>=3",
+  "ruff>=0.1",
+  "twine>=4",
+  "typing-extensions>=4",
 ]
+test = [
+  "pytest>=7",
+  "pytest-cov>=4",
+]
+
+[tool.setuptools]
+packages = [ "deprecator" ]
+
 [tool.ruff]
 target-version = "py38"
 line-length = 88
 
-[tool.ruff.lint]
-select = [
-    "E",   # pycodestyle errors
-    "W",   # pycodestyle warnings
-    "F",   # pyflakes
-    "I",   # isort
-    "B",   # flake8-bugbear
-    "C",  # flake8-comprehensions
-    "UP",  # pyupgrade
+format.indent-style = "space"
+format.quote-style = "double"
+format.line-ending = "auto"
+format.skip-magic-trailing-comma = false
+lint.select = [
+  "B",  # flake8-bugbear
+  "C",  # flake8-comprehensions
+  "E",  # pycodestyle errors
+  "F",  # pyflakes
+  "I",  # isort
+  "UP", # pyupgrade
+  "W",  # pycodestyle warnings
 ]
 
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
-skip-magic-trailing-comma = false
-line-ending = "auto"
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = [
+  ".",
+]
+python_files = [
+  "test_*.py",
+  "*_test.py",
+]
+python_functions = [
+  "test_*",
+]
+
+[tool.coverage.run]
+source = [ "deprecator" ]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "if __name__ == .__main__.:",
+  "raise AssertionError",
+  "raise NotImplementedError",
+]
 
 [tool.mypy]
 python_version = "3.10"
@@ -109,33 +127,5 @@ warn_no_return = true
 warn_unreachable = true
 strict_equality = true
 
-[tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config"
-testpaths = [
-    ".",
-]
-python_files = [
-    "test_*.py",
-    "*_test.py",
-]
-python_functions = [
-    "test_*",
-]
-
-[tool.coverage.run]
-source = ["deprecator"]
-branch = true
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if __name__ == .__main__.:",
-    "raise AssertionError",
-    "raise NotImplementedError",
-]
-
-
 [tool.uv]
-default-groups = ["dev", "test"]
+default-groups = [ "dev", "test" ]
