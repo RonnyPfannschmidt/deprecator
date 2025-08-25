@@ -49,7 +49,9 @@ test = [
 packages = [ "deprecator" ]
 
 [tool.ruff]
+format.line-ending = "lf"
 lint.extend-select = [
+  "ANN",
   "B",   # flake8-bugbear
   "C",   # flake8-comprehensions
   "C90",
@@ -63,7 +65,7 @@ lint.extend-select = [
   "UP",  # pyupgrade
   "W",   # pycodestyle warnings
 ]
-format.line-ending = "lf"
+lint.future-annotations = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
