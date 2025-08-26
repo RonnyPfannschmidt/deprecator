@@ -12,11 +12,9 @@ from typing_extensions import ParamSpec, Protocol, TypeVar
 P = ParamSpec("P")
 R = TypeVar("R")
 
-warnings.simplefilter("always", DeprecationWarning)
-
 
 class Decorator(Protocol):
-    def __call__(self, fun: Callable[P, R]) -> Callable[P, R]: ...
+    def __call__(self, fun: Callable[P, R]) -> Callable[P, R]: ...  # pragma: no cover
 
 
 class HasName(Protocol):

@@ -69,17 +69,8 @@ lint.future-annotations = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config"
-testpaths = [
-  ".",
-]
-python_files = [
-  "test_*.py",
-  "*_test.py",
-]
-python_functions = [
-  "test_*",
-]
+addopts = "-ra --strict-markers --strict-config --cov-report=term-missing"
+testpaths = ["testing"]
 
 [tool.coverage.run]
 source = [ "deprecator" ]
