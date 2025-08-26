@@ -1,3 +1,3 @@
-from ._deprecator import deprecate
+from ._legacy import deprecate
 
 __all__ = ["deprecate"]
