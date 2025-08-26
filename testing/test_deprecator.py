@@ -60,6 +60,7 @@ def test_deprecator_define_error(deprecator: Deprecator) -> None:
         (FUTURE_VERSION, PAST_VERSION, PerPackageDeprecationWarning),
         (FUTURE_VERSION, FUTURE_VERSION, PerPackagePendingDeprecationWarning),
         (PAST_VERSION, CURRENT_VERSION, PerPackageExpiredDeprecationWarning),
+        (CURRENT_VERSION, CURRENT_VERSION, PerPackageExpiredDeprecationWarning),
     ],
 )
 def test_deprecator_category_specification(
