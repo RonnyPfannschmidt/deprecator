@@ -148,7 +148,7 @@ class Deprecator:
         warn_in = self._parse_version(warn_in)
 
         if replace_with is not None:
-            message = f"{message}\n\na replacement migth be: {replace_with}"
+            message = f"{message}\n\na replacement might be: {replace_with}"
 
         if gone_in < warn_in:
             raise ValueError("gone_in must be greater than or equal to warn_in")

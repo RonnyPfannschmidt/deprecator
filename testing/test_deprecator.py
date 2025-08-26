@@ -38,13 +38,13 @@ def test_deprecator_make_definitions(deprecator: Deprecator) -> None:
     # TODO: reassert
     assert "test" in text
     assert "replacement" in text
-    assert "a replacement migth be" in text
+    assert "a replacement might be" in text
 
     warning = deprecator.define("test", gone_in=FUTURE_VERSION, warn_in=PAST_VERSION)
     assert isinstance(warning, DeprecationWarning)
     text = str(warning)
     assert "test" in text
-    assert "a replacement migth be" not in text
+    assert "a replacement might be" not in text
 
 
 def test_deprecator_define_error(deprecator: Deprecator) -> None:
