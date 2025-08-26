@@ -98,11 +98,11 @@ class Deprecator:
         return PendingDeprecationWarning, DeprecationWarning, DeprecationError
 
     @classmethod
-    def for_package(self, package_name: str) -> Deprecator:
+    def for_package(cls, package_name: str) -> Deprecator:
         package_version = Version(importlib.metadata.version(package_name))
 
         PendingDeprecationWarning, DeprecationWarning, DeprecationError = (
-            self._define_categories(package_name)
+            cls._define_categories(package_name)
         )
 
         return Deprecator(
