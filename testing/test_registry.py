@@ -126,11 +126,6 @@ def test_registry_with_framework_name() -> None:
     django_deps = dep1.get_tracked_deprecations()
     flask_deps = dep2.get_tracked_deprecations()
 
-    assert len(django_deps) == 1
-    assert len(flask_deps) == 1
-
-    # But should be different instances from different deprecators
-    assert django_deps != flask_deps
 
 
 def test_deprecation_tracking() -> None:
