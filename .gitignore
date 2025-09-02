@@ -28,3 +28,6 @@ Thumbs.db
 # Ruff and mypy caches
 .ruff_cache/
 .mypy_cache/
+
+# Claude Code
+.claude/settings.local.json

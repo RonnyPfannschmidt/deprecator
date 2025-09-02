@@ -10,12 +10,17 @@ from ._deprecator import Deprecator
 
 
 class DeprecatorRegistry:
-    """Registry that manages deprecator instances for packages."""
+    """collection of deprecators bound to a specific framework by package name
 
-    def __init__(self, *, framework_name: str | None = None) -> None:
-        self.framework_name = framework_name
+    we use deprecator as "framework" for unbound deprecators"""
+
+    package: str
+    _deprecators: dict[str, Deprecator]
+
+    def __init__(self, *, package: str) -> None:
+        self.package = package
         # Cache deprecators by (package_name, version) tuple
-        self._deprecators: dict[str, Deprecator] = {}
+        self._deprecators = {}
 
     def for_package(
         self, package_name: str, *, _version: Version | None = None
@@ -48,4 +53,4 @@ class DeprecatorRegistry:
 
 
 # Global default registry instance
-default_registry = DeprecatorRegistry()
+default_registry = DeprecatorRegistry(package="deprecator")
