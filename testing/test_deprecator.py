@@ -1,8 +1,8 @@
 import pytest
 from packaging.version import Version
 
-from deprecator._deprecator import (
-    Deprecator,
+from deprecator._deprecator import Deprecator
+from deprecator._warnings import (
     PerPackageDeprecationWarning,
     PerPackageExpiredDeprecationWarning,
     PerPackagePendingDeprecationWarning,
