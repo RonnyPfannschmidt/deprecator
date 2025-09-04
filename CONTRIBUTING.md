@@ -2,38 +2,58 @@
 
 ## Development Setup
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/antlong/deprecator.git
-   cd deprecator
-   ```
+This project uses uv for dependency management and running commands.
 
-2. Install development dependencies:
-   ```bash
-   uv sync
-   ```
+### Prerequisites
 
-3. Install pre-commit hooks:
-   ```bash
-   pre-commit install
-   ```
+- Python 3.8+
+- uv (install from https://docs.astral.sh/uv/)
+
+### Installation
+
+```bash
+# Install dependencies and dev environment
+uv sync
+```
 
 ## Development Workflow
 
 ### Running Tests
+
 ```bash
 # Run all tests
 uv run pytest
 
 # Run tests with coverage
 uv run pytest --cov=deprecator
+
+# Run specific test file
+uv run pytest tests/test_deprecator.py
 ```
 
 ### Code Quality
+
+This project uses pre-commit hooks to maintain code quality:
+
 ```bash
-# Run all pre-commit checks
+# Install pre-commit hooks (one-time setup)
+uv run pre-commit install
+
+# Run all checks manually
 uv run pre-commit run --all-files
+
+# Run specific checks
+uv run pre-commit run black
+uv run pre-commit run ruff
 ```
+
+### Code Style
+
+- Follow PEP 8 style guidelines
+- Use black for code formatting
+- Use ruff for linting
+- Maintain consistent docstring format
+- Add type hints where appropriate
 
 
 
@@ -55,27 +75,24 @@ The project uses GitHub Actions with two main jobs using **uv** for fast depende
 
 **Optional PyPI Upload**: Ready-to-use jobs for Test PyPI and PyPI (commented out by default)
 
-## Project Structure
-
-```
-deprecator/
-├── deprecator/           # Main package
-│   ├── __init__.py
-│   └── _deprecator.py   # Core deprecation functionality
-├── test_deprecator.py   # Test suite
-├── pyproject.toml       # Project configuration
-├── .pre-commit-config.yaml
-└── .github/workflows/ci.yml
-```
 
 ## Making Changes
 
-1. Create a feature branch
-2. Make your changes
-3. Add/update tests as needed
-4. Run quality checks: `pre-commit run --all-files`
-5. Commit (pre-commit hooks will run)
-6. Push and create a pull request
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes
+4. Add tests for new functionality
+5. Run the test suite: `uv run pytest`
+6. Run code quality checks: `uv run pre-commit run --all-files`
+7. Commit your changes with a clear message
+8. Push to your fork and create a pull request
+
+## Documentation
+
+- Update README.md for user-facing changes
+- Add docstrings to new functions and classes
+- Include usage examples for new features
+- Keep CLAUDE.md updated for development guidance
 
 ## Release Process
 
