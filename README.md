@@ -55,11 +55,29 @@ my_warning = deprecator.define(
     gone_in="3.0.0"
 )
 
-# Use the warning
+# Use the warning in different ways
 def old_function():
+    # Standard warning (uses stacklevel=2 by default)
     my_warning.warn()
     # ... existing functionality
+
+def wrapper_function():
+    # Custom stacklevel for wrapper functions
+    my_warning.warn(stacklevel=3)
+
+def linter_integration():
+    # Explicit file/line for tools and linters
+    my_warning.warn_explicit("myfile.py", 42)
 ```
+
+## Warning Methods
+
+Each deprecation warning instance provides two methods for emitting warnings:
+
+- **`warn(stacklevel=2)`**: Emit warning using the standard warnings system
+- **`warn_explicit(filename, lineno, module=None)`**: Emit warning with explicit location
+
+These mirror the stdlib `warnings.warn()` and `warnings.warn_explicit()` functions.
 
 ## Testing Structure
 

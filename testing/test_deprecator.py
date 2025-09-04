@@ -19,7 +19,7 @@ FUTURE_VERSION = Version("0.2.0")
 def deprecator() -> Deprecator:
     package_name = "deprecator_test"
     PendingDeprecationWarning, DeprecationWarning, DeprecationError = (
-        Deprecator._define_categories(package_name)
+        Deprecator._define_categories(package_name, CURRENT_VERSION)
     )
     return Deprecator(
         package_name,
