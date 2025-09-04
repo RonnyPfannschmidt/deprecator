@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 from packaging.version import Version
 
+from ._types import PackageName
 from ._warnings import (
     DeprecatorWarningMixing,
     PerPackageDeprecationWarning,
@@ -24,7 +25,7 @@ class DeprecationInfo(TypedDict):
 
 
 class Deprecator:
-    package_name: str
+    name: PackageName
     current_version: Version
 
     PendingDeprecationWarning: type[PerPackagePendingDeprecationWarning]
@@ -33,7 +34,7 @@ class Deprecator:
 
     def __init__(
         self,
-        package_name: str,
+        name: PackageName,
         current_version: Version,
         *,
         pending: type[PerPackagePendingDeprecationWarning],
@@ -41,7 +42,7 @@ class Deprecator:
         deprecation_error: type[PerPackageExpiredDeprecationWarning],
         registry: DeprecatorRegistry | None = None,
     ) -> None:
-        self.package_name = package_name
+        self.name = name
         self.current_version = current_version
         self.PendingDeprecationWarning = pending
         self.DeprecationWarning = deprecation
@@ -52,7 +53,7 @@ class Deprecator:
 
     @classmethod
     def _define_categories(
-        cls, package_name: str
+        cls, package_name: PackageName
     ) -> tuple[
         type[PerPackagePendingDeprecationWarning],
         type[PerPackageDeprecationWarning],
@@ -77,7 +78,7 @@ class Deprecator:
 
     @classmethod
     def for_package(
-        cls, package_name: str, _package_version: Version | None = None
+        cls, package_name: PackageName, _package_version: Version | None = None
     ) -> Deprecator:
         package_version = _package_version or Version(
             importlib.metadata.version(package_name)

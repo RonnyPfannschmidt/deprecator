@@ -20,6 +20,7 @@ The deprecator package provides a structured approach to handling deprecation wa
   - Caches deprecators by package name to avoid duplication
   - Provides `for_package()` method to get or create deprecators
   - Framework-specific registries allow different libraries to manage their own deprecation scopes
+  - Each registry has a `framework` attribute identifying the framework/library it serves
 
 - **Warning Categories** (`deprecator/_deprecator.py`): Version-aware warning types:
   - `PerPackagePendingDeprecationWarning`: For future deprecations (current_version < warn_in)
@@ -29,8 +30,8 @@ The deprecator package provides a structured approach to handling deprecation wa
 ### Public API
 
 - `deprecate()`: Legacy decorator function for simple deprecation warnings
-- `for_package(package_name)`: Get a deprecator bound to a specific package
-- `registry_for_package(package_name)`: Get a registry bound to a specific package
+- `for_package(package_name: PackageName)`: Get a deprecator bound to a specific package
+- `registry_for_package(package_name: PackageName)`: Get a registry bound to a specific framework
 
 ### Version Logic
 
@@ -42,10 +43,10 @@ The deprecator automatically determines warning categories based on version comp
 ## Usage
 
 ```python
-from deprecator import for_package
+from deprecator import for_package, PackageName
 
 # Get a deprecator for your package
-deprecator = for_package("mypackage")
+deprecator = for_package(PackageName("mypackage"))
 
 # Define a deprecation
 my_warning = deprecator.define(

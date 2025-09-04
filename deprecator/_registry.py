@@ -7,27 +7,28 @@ import warnings
 from packaging.version import Version
 
 from ._deprecator import Deprecator
+from ._types import PackageName
 
 
 class DeprecatorRegistry:
-    """collection of deprecators bound to a specific framework by package name
+    """collection of deprecators bound to a specific framework
 
     we use deprecator as "framework" for unbound deprecators"""
 
-    package: str
-    _deprecators: dict[str, Deprecator]
+    framework: PackageName
+    _deprecators: dict[PackageName, Deprecator]
 
-    def __init__(self, *, package: str) -> None:
-        self.package = package
+    def __init__(self, *, framework: PackageName) -> None:
+        self.framework = framework
         # Cache deprecators by (package_name, version) tuple
         self._deprecators = {}
 
     def for_package(
-        self, package_name: str, *, _version: Version | None = None
+        self, package_name: PackageName, *, _version: Version | None = None
     ) -> Deprecator:
         """Get or create a deprecator for the given package and version.
 
-        :param package_name: Name of the package
+        :param package_name: Name of the package to create deprecator for
         :param _version:
             NOTE: This is private/internal. User code should NOT provide this argument.
             This is Version of the package. If None, will be looked up automatically.
@@ -53,4 +54,4 @@ class DeprecatorRegistry:
 
 
 # Global default registry instance
-default_registry = DeprecatorRegistry(package="deprecator")
+default_registry = DeprecatorRegistry(framework=PackageName("deprecator"))
