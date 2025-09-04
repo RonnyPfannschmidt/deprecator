@@ -14,18 +14,18 @@ from deprecator._types import PackageName
 def registry() -> DeprecatorRegistry:
     """Fixture to provide a fresh DeprecatorRegistry instance for each test."""
 
-    return DeprecatorRegistry(framework=PackageName(":test-example"))
+    return DeprecatorRegistry(framework=":test-example")
 
 
 def test_deprecator_registry_for_package(registry: DeprecatorRegistry) -> None:
     """Test that registry can get or create deprecators for packages."""
     # Mock package for testing
-    package_name = PackageName("test_package")
+    package_name = "test_package"
 
     # First call should create a new deprecator
     deprecator1 = registry.for_package(package_name, _version=Version("1.0.0"))
     assert isinstance(deprecator1, Deprecator)
-    assert deprecator1.name == package_name
+    assert deprecator1.name == PackageName(package_name)
     assert deprecator1.current_version == Version("1.0.0")
 
     # Second call with same package should return the same instance
@@ -60,7 +60,7 @@ def test_for_package_uses_default_registry() -> None:
     called_with = []
 
     def mock_for_package(
-        package_name: PackageName, *, _version: Version | None = None
+        package_name: PackageName | str, *, _version: Version | None = None
     ) -> Deprecator:
         called_with.append((package_name, _version))
         return original_for_package(package_name, _version=_version)
@@ -69,9 +69,9 @@ def test_for_package_uses_default_registry() -> None:
 
     try:
         # Use an existing package to avoid metadata lookup issues in tests
-        deprecator.for_package(PackageName("deprecator"))
+        deprecator.for_package("deprecator")
         assert len(called_with) == 1
-        assert called_with[0][0] == PackageName("deprecator")
+        assert called_with[0][0] == "deprecator"
         assert called_with[0][1] is None  # _version should be None when not specified
     finally:
         # Restore original method
@@ -83,7 +83,7 @@ def test_custom_registry_creation() -> None:
     from deprecator._registry import DeprecatorRegistry
 
     # Create custom registry for a framework
-    framework_registry = DeprecatorRegistry(framework=PackageName("test-framework"))
+    framework_registry = DeprecatorRegistry(framework="test-framework")
 
     # Should be different from default registry
     from deprecator._registry import default_registry
@@ -91,12 +91,8 @@ def test_custom_registry_creation() -> None:
     assert framework_registry is not default_registry
 
     # Should work independently
-    dep1 = framework_registry.for_package(
-        PackageName("my_framework"), _version=Version("1.0.0")
-    )
-    dep2 = default_registry.for_package(
-        PackageName("my_framework"), _version=Version("1.0.0")
-    )
+    dep1 = framework_registry.for_package("my_framework", _version=Version("1.0.0"))
+    dep2 = default_registry.for_package("my_framework", _version=Version("1.0.0"))
 
     # Different registries should create different instances
     assert dep1 is not dep2
@@ -107,9 +103,9 @@ def test_registry_with_framework_name() -> None:
     from deprecator._registry import DeprecatorRegistry
 
     # Create registries with different framework names
-    django_registry = DeprecatorRegistry(framework=PackageName("Django"))
-    flask_registry = DeprecatorRegistry(framework=PackageName("Flask"))
-    unnamed_registry = DeprecatorRegistry(framework=PackageName("unnamed"))
+    django_registry = DeprecatorRegistry(framework="Django")
+    flask_registry = DeprecatorRegistry(framework="Flask")
+    unnamed_registry = DeprecatorRegistry(framework="unnamed")
 
     # Check framework names
     assert django_registry.framework == PackageName("Django")
@@ -117,12 +113,8 @@ def test_registry_with_framework_name() -> None:
     assert unnamed_registry.framework == PackageName("unnamed")
 
     # Different framework registries should be independent
-    dep1 = django_registry.for_package(
-        PackageName("web_framework"), _version=Version("1.0.0")
-    )
-    dep2 = flask_registry.for_package(
-        PackageName("web_framework"), _version=Version("1.0.0")
-    )
+    dep1 = django_registry.for_package("web_framework", _version=Version("1.0.0"))
+    dep2 = flask_registry.for_package("web_framework", _version=Version("1.0.0"))
 
     assert dep1 is not dep2
 
@@ -139,10 +131,8 @@ def test_deprecation_tracking() -> None:
     """Test that deprecations are tracked by the deprecator itself."""
     from deprecator._registry import DeprecatorRegistry
 
-    registry = DeprecatorRegistry(framework=PackageName("test-package"))
-    deprecator_instance = registry.for_package(
-        PackageName("my_package"), _version=Version("1.0.0")
-    )
+    registry = DeprecatorRegistry(framework="test-package")
+    deprecator_instance = registry.for_package("my_package", _version=Version("1.0.0"))
 
     # Define some deprecations - these should be tracked by the deprecator
     deprecation1 = deprecator_instance.define(
@@ -176,10 +166,8 @@ def test_deprecation_tracking_with_importable_names() -> None:
     """Test that deprecations can be created with importable names."""
     from deprecator._registry import DeprecatorRegistry
 
-    registry = DeprecatorRegistry(framework=PackageName(":test-example"))
-    deprecator_instance = registry.for_package(
-        PackageName("my_package"), _version=Version("1.0.0")
-    )
+    registry = DeprecatorRegistry(framework=":test-example")
+    deprecator_instance = registry.for_package("my_package", _version=Version("1.0.0"))
 
     # Define deprecations with explicit importable names
     deprecation1 = deprecator_instance.define(

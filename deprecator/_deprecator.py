@@ -34,7 +34,7 @@ class Deprecator:
 
     def __init__(
         self,
-        name: PackageName,
+        name: PackageName | str,
         current_version: Version,
         *,
         pending: type[PerPackagePendingDeprecationWarning],
@@ -42,7 +42,7 @@ class Deprecator:
         deprecation_error: type[PerPackageExpiredDeprecationWarning],
         registry: DeprecatorRegistry | None = None,
     ) -> None:
-        self.name = name
+        self.name = PackageName(name)
         self.current_version = current_version
         self.PendingDeprecationWarning = pending
         self.DeprecationWarning = deprecation
@@ -53,24 +53,24 @@ class Deprecator:
 
     @classmethod
     def _define_categories(
-        cls, package_name: PackageName
+        cls, package_name: PackageName | str
     ) -> tuple[
         type[PerPackagePendingDeprecationWarning],
         type[PerPackageDeprecationWarning],
         type[PerPackageExpiredDeprecationWarning],
     ]:
+        pkg_name = PackageName(package_name)
+
         class PendingDeprecationWarning(
-            PerPackagePendingDeprecationWarning, package_name=package_name
+            PerPackagePendingDeprecationWarning, package_name=pkg_name
         ):
             pass
 
-        class DeprecationWarning(
-            PerPackageDeprecationWarning, package_name=package_name
-        ):
+        class DeprecationWarning(PerPackageDeprecationWarning, package_name=pkg_name):
             pass
 
         class DeprecationError(
-            PerPackageExpiredDeprecationWarning, package_name=package_name
+            PerPackageExpiredDeprecationWarning, package_name=pkg_name
         ):
             pass
 
@@ -78,18 +78,19 @@ class Deprecator:
 
     @classmethod
     def for_package(
-        cls, package_name: PackageName, _package_version: Version | None = None
+        cls, package_name: PackageName | str, _package_version: Version | None = None
     ) -> Deprecator:
+        pkg_name = PackageName(package_name)
         package_version = _package_version or Version(
-            importlib.metadata.version(package_name)
+            importlib.metadata.version(pkg_name)
         )
 
         PendingDeprecationWarning, DeprecationWarning, DeprecationError = (
-            cls._define_categories(package_name)
+            cls._define_categories(pkg_name)
         )
 
         return Deprecator(
-            package_name,
+            pkg_name,
             package_version,
             pending=PendingDeprecationWarning,
             deprecation=DeprecationWarning,

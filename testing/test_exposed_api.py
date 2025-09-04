@@ -7,7 +7,7 @@ from deprecator._types import PackageName
 
 
 def test_for_package() -> None:
-    dep = deprecator.for_package(PackageName("deprecator"))
+    dep = deprecator.for_package("deprecator")
 
     assert isinstance(dep, deprecator._deprecator.Deprecator)
 

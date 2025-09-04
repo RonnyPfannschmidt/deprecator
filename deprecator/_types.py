@@ -6,4 +6,4 @@ from typing import NewType
 
 # A package name used throughout the deprecator system
 # Used for both framework names in registries and package names in deprecators
-PackageName = NewType('PackageName', str)
+PackageName = NewType("PackageName", str)

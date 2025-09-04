@@ -18,13 +18,13 @@ class DeprecatorRegistry:
     framework: PackageName
     _deprecators: dict[PackageName, Deprecator]
 
-    def __init__(self, *, framework: PackageName) -> None:
-        self.framework = framework
+    def __init__(self, *, framework: PackageName | str) -> None:
+        self.framework = PackageName(framework)
         # Cache deprecators by (package_name, version) tuple
         self._deprecators = {}
 
     def for_package(
-        self, package_name: PackageName, *, _version: Version | None = None
+        self, package_name: PackageName | str, *, _version: Version | None = None
     ) -> Deprecator:
         """Get or create a deprecator for the given package and version.
 
@@ -35,12 +35,13 @@ class DeprecatorRegistry:
         :returns: Deprecator instance for the package
         """
 
-        if package_name not in self._deprecators:
-            self._deprecators[package_name] = Deprecator.for_package(
-                package_name, _package_version=_version
+        pkg_name = PackageName(package_name)
+        if pkg_name not in self._deprecators:
+            self._deprecators[pkg_name] = Deprecator.for_package(
+                pkg_name, _package_version=_version
             )
 
-        res = self._deprecators[package_name]
+        res = self._deprecators[pkg_name]
 
         if _version is not None and res.current_version != _version:
             warnings.warn(

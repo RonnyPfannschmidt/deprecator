@@ -30,8 +30,8 @@ The deprecator package provides a structured approach to handling deprecation wa
 ### Public API
 
 - `deprecate()`: Legacy decorator function for simple deprecation warnings
-- `for_package(package_name: PackageName)`: Get a deprecator bound to a specific package
-- `registry_for_package(package_name: PackageName)`: Get a registry bound to a specific framework
+- `for_package(package_name: PackageName | str)`: Get a deprecator bound to a specific package
+- `registry_for_package(package_name: PackageName | str)`: Get a registry bound to a specific framework
 
 ### Version Logic
 
@@ -43,10 +43,10 @@ The deprecator automatically determines warning categories based on version comp
 ## Usage
 
 ```python
-from deprecator import for_package, PackageName
+from deprecator import for_package
 
-# Get a deprecator for your package
-deprecator = for_package(PackageName("mypackage"))
+# Get a deprecator for your package (accepts str or PackageName)
+deprecator = for_package("mypackage")
 
 # Define a deprecation
 my_warning = deprecator.define(
