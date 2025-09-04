@@ -63,7 +63,7 @@ def test_warn_explicit_with_filename_lineno(deprecator: Deprecator) -> None:
     assert str(caught_warning.message) == "explicit test warning"
     assert caught_warning.filename == "test_file.py"
     assert caught_warning.lineno == 42
-    assert caught_warning.category == DeprecationWarning  # Should use stdlib category
+    assert caught_warning.category is DeprecationWarning  # Should use stdlib category
 
 
 def test_warn_explicit_with_module(deprecator: Deprecator) -> None:
@@ -79,7 +79,7 @@ def test_warn_explicit_with_module(deprecator: Deprecator) -> None:
     assert str(caught_warning.message) == "module test warning"
     assert caught_warning.filename == "test_file.py"
     assert caught_warning.lineno == 100
-    assert caught_warning.category == DeprecationWarning
+    assert caught_warning.category is DeprecationWarning
 
 
 def test_different_warning_categories(deprecator: Deprecator) -> None:
@@ -140,7 +140,7 @@ def test_warn_explicit_pending_warning(deprecator: Deprecator) -> None:
     assert len(warning_list) == 1
     caught_warning = warning_list[0]
     assert str(caught_warning.message) == "pending test warning"
-    assert caught_warning.category == PendingDeprecationWarning
+    assert caught_warning.category is PendingDeprecationWarning
 
 
 def test_warning_with_replacement_message() -> None:
