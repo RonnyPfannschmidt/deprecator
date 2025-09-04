@@ -31,6 +31,9 @@ classifiers = [
 dynamic = [ "version" ]
 urls.Homepage = "http://github.com/antlong/deprecator"
 
+[project.entry-points.pytest11]
+deprecator = "deprecator._pytest_plugin"
+
 [dependency-groups]
 dev = [
   "build>=0.10",
@@ -69,7 +72,7 @@ lint.future-annotations = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra --strict-markers --strict-config --cov-report=term-missing"
+addopts = "-ra --strict-markers --strict-config --cov-report=term-missing -p pytester"
 testpaths = ["testing"]
 
 [tool.coverage.run]
