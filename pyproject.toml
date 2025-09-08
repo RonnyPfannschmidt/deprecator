@@ -6,7 +6,6 @@ requires = [ "setuptools>=75", "setuptools-scm>=9" ]
 [project]
 name = "deprecator"
 description = "Deprecator provides a decorator to easily deprecate old code."
-readme = "README.rst"
 keywords = [ "decorator", "deprecate", "deprecation", "warn", "warning" ]
 license = { text = "Apache 2.0" }
 maintainers = [

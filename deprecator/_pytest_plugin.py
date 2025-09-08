@@ -2,39 +2,94 @@
 
 from __future__ import annotations
 
+import os
 import warnings
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
 
 import pytest
 
-from ._warnings import PerPackageExpiredDeprecationWarning
+from ._warnings import (
+    DeprecatorWarningMixing,
+    PerPackageExpiredDeprecationWarning,
+)
 
-if TYPE_CHECKING:
-    pass
+CI_ENV_VARS = (
+    "CI",
+    "CONTINUOUS_INTEGRATION",
+    "GITHUB_ACTIONS",
+    "GITLAB_CI",
+    "JENKINS_URL",
+    "CIRCLECI",
+    "BUILDKITE",
+)
 
 
+def _is_ci_environment() -> bool:
+    """Check if we're running in a CI environment."""
+    return any(os.environ.get(var) for var in CI_ENV_VARS)
+
+
+@dataclass(frozen=True)
+class GithubAnnotation:
+    """Represents a GitHub Actions annotation."""
+
+    type: str  # "error" or "warning"
+    file: str
+    line: str
+    message: str
+
+
+@dataclass(eq=False)
 class DeprecatorPlugin:
     """Plugin that handles expired deprecation warnings."""
 
-    def __init__(self) -> None:
-        self.expired_warnings_count = 0
+    show_github_annotations: bool
+    expired_warnings_count: int = field(default_factory=int, init=False)
+    github_annotations: list[GithubAnnotation] = field(default_factory=list, init=False)
 
     def pytest_warning_recorded(
         self,
         warning_message: warnings.WarningMessage,
-        when: str,
-        nodeid: str,
-        location: tuple[str, int, str] | None,
     ) -> None:
-        """Track expired deprecation warnings."""
+        """Track expired deprecation warnings and collect for GitHub annotations."""
         if isinstance(warning_message.message, PerPackageExpiredDeprecationWarning):
             self.expired_warnings_count += 1
 
+        assert isinstance(warning_message.message, DeprecatorWarningMixing)
+
+        warning_type = warning_message.message.github_warning_kind
+        self.github_annotations.append(
+            GithubAnnotation(
+                type=warning_type,
+                file=warning_message.filename,
+                line=str(warning_message.lineno),
+                message=str(warning_message.message),
+            )
+        )
+
     def pytest_sessionfinish(self, session: pytest.Session) -> None:
-        """Mark session as failed if expired deprecations were encountered."""
+        """Mark session as failed if expired deprecations were encountered"""
         if self.expired_warnings_count > 0:
             # Mark the session as failed
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
+
+    def pytest_terminal_summary(
+        self, terminalreporter: pytest.TerminalReporter, config: pytest.Config
+    ) -> None:
+        if self.show_github_annotations and _is_ci_environment():
+            self._output_github_annotations(terminalreporter)
+
+    def _output_github_annotations(
+        self, terminalreporter: pytest.TerminalReporter
+    ) -> None:
+        """Output GitHub annotations to stdout."""
+
+        for annotation in self.github_annotations:
+            # GitHub Actions annotation format
+            terminalreporter.write(
+                f"::{annotation.type} file={annotation.file},line={annotation.line},"
+                f"title=deprecation::{annotation.message}"
+            )
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -46,11 +101,19 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Convert expired deprecation warnings to errors",
     )
+    group.addoption(
+        "--deprecator-github-annotations",
+        action="store_true",
+        default=False,
+        help="Output deprecation warnings as GitHub Actions annotations",
+    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
     """Register the deprecator plugin and configure warning handling."""
-    plugin = DeprecatorPlugin()
+    plugin = DeprecatorPlugin(
+        show_github_annotations=config.getoption("--deprecator-github-annotations"),
+    )
     config.pluginmanager.register(plugin, "deprecator-instance")
 
 

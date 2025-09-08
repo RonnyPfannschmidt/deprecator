@@ -8,6 +8,7 @@ from packaging.version import Version
 
 class DeprecatorWarningMixing(Warning):
     package_name: ClassVar[str]
+    github_warning_kind: ClassVar[str]
     gone_in: ClassVar[Version]
     warn_in: ClassVar[Version]
     current_version: ClassVar[Version]
@@ -71,14 +72,20 @@ class PerPackagePendingDeprecationWarning(
     category for deprecations that are pending and we want to warn about in tests
     """
 
+    github_warning_kind = "warning"
+
 
 class PerPackageDeprecationWarning(DeprecatorWarningMixing, DeprecationWarning):
     """
     category for deprecations we want to warn about
     """
 
+    github_warning_kind = "warning"
+
 
 class PerPackageExpiredDeprecationWarning(DeprecatorWarningMixing, DeprecationWarning):
     """
     category for deprecations to trigger errors for unless explicitly suppressed
     """
+
+    github_warning_kind = "error"
