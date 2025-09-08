@@ -52,10 +52,12 @@ class DeprecatorPlugin:
         warning_message: warnings.WarningMessage,
     ) -> None:
         """Track expired deprecation warnings and collect for GitHub annotations."""
+        # Only process deprecator warnings
+        if not isinstance(warning_message.message, DeprecatorWarningMixing):
+            return
+
         if isinstance(warning_message.message, PerPackageExpiredDeprecationWarning):
             self.expired_warnings_count += 1
-
-        assert isinstance(warning_message.message, DeprecatorWarningMixing)
 
         warning_type = warning_message.message.github_warning_kind
         self.github_annotations.append(
@@ -76,7 +78,7 @@ class DeprecatorPlugin:
     def pytest_terminal_summary(
         self, terminalreporter: pytest.TerminalReporter, config: pytest.Config
     ) -> None:
-        if self.show_github_annotations and _is_ci_environment():
+        if self.show_github_annotations:
             self._output_github_annotations(terminalreporter)
 
     def _output_github_annotations(
@@ -86,7 +88,7 @@ class DeprecatorPlugin:
 
         for annotation in self.github_annotations:
             # GitHub Actions annotation format
-            terminalreporter.write(
+            terminalreporter.write_line(
                 f"::{annotation.type} file={annotation.file},line={annotation.line},"
                 f"title=deprecation::{annotation.message}"
             )

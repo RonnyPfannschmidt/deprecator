@@ -163,8 +163,8 @@ def test_github_annotations_auto_enabled_in_github_actions(
     # Check that GitHub annotations are in the output
     result.stdout.fnmatch_lines(
         [
-            "::warning file=testing/test_pytest_plugin.py,line=5,"
-            "title=deprecation::This is pending"
+            "::warning file=*/test_github_annotations_auto_enabled_in_github_actions.py"
+            ",line=11,title=deprecation::This is pending"
         ]
     )
 
