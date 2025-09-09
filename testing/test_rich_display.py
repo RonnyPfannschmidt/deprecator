@@ -8,17 +8,11 @@ from rich.table import Table
 
 from deprecator._deprecator import Deprecator
 from deprecator._rich_display import (
-    ACTIVE_WARNINGS,
-    ALL_WARNING_TYPES,
-    PENDING_WARNINGS,
     _get_warning_type_display_name,
     create_deprecations_table,
     print_deprecations_table,
 )
-from deprecator._warnings import (
-    PerPackagePendingDeprecationWarning,
-)
-from deprecator.ux import print_deprecations
+from deprecator.ux import get_warning_types, print_deprecations
 
 
 class TestCreateDeprecationsTable:
@@ -54,10 +48,8 @@ class TestCreateDeprecationsTable:
         )
 
         # Create a deprecation
-        warning = deprecator.define(
-            "This function is deprecated",
-            gone_in="2.0.0",
-            warn_in="1.5.0",
+        deprecator.define(
+            "This function is deprecated", gone_in="2.0.0", warn_in="1.5.0"
         )
 
         table = create_deprecations_table(deprecator)
@@ -73,21 +65,21 @@ class TestCreateDeprecationsTable:
         )
 
         # Pending deprecation (warn_in > current_version)
-        pending = deprecator.define(
+        deprecator.define(
             "This will be deprecated",
             gone_in="3.0.0",
             warn_in="2.0.0",
         )
 
         # Active deprecation (warn_in <= current_version < gone_in)
-        active = deprecator.define(
+        deprecator.define(
             "This is deprecated",
             gone_in="2.0.0",
             warn_in="1.0.0",
         )
 
         # Expired deprecation (gone_in <= current_version)
-        expired = deprecator.define(
+        deprecator.define(
             "This should error",
             gone_in="1.0.0",
             warn_in="0.5.0",
@@ -106,13 +98,14 @@ class TestCreateDeprecationsTable:
         )
 
         # Create different types of deprecations
-        pending = deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-        expired = deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
         # Filter for only pending warnings
         table = create_deprecations_table(
-            deprecator, warning_types={PerPackagePendingDeprecationWarning}
+            deprecator,
+            warning_types=get_warning_types(pending=True, active=False, expired=False),
         )
 
         assert len(table.rows) == 1
@@ -124,26 +117,28 @@ class TestCreateDeprecationsTable:
         )
 
         # Create different types of deprecations
-        pending = deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-        expired = deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
         # Filter for active warnings (deprecation + expired)
-        table = create_deprecations_table(deprecator, warning_types=ACTIVE_WARNINGS)
+        table = create_deprecations_table(
+            deprecator,
+            warning_types=get_warning_types(pending=False, active=True, expired=True),
+        )
 
         assert len(table.rows) == 2
 
     def test_no_importable_name(self) -> None:
-        """Test deprecation without importable name."""
+        """Test deprecation (importable names no longer tracked)."""
         deprecator = Deprecator.for_package(
             "test-package", _package_version=Version("1.0.0")
         )
 
-        warning = deprecator.define(
-            "This has no importable name",
+        deprecator.define(
+            "This deprecation works fine",
             gone_in="2.0.0",
             warn_in="1.5.0",
-            # No importable_name parameter
         )
 
         table = create_deprecations_table(deprecator)
@@ -183,14 +178,18 @@ class TestPrintDeprecationsTable:
             "test-package", _package_version=Version("1.5.0")
         )
 
-        pending = deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
 
         console = Console(file=None, width=120)
         with console.capture() as capture:
             # Should not raise an exception
             print_deprecations_table(
-                deprecator, warning_types=PENDING_WARNINGS, console=console
+                deprecator,
+                warning_types=get_warning_types(
+                    pending=True, active=False, expired=False
+                ),
+                console=console,
             )
 
         assert "Pending" in capture.get()
@@ -240,9 +239,9 @@ class TestUXPrintDeprecations:
         )
 
         # Create different types of deprecations
-        pending = deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-        expired = deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
         console = Console(file=None, width=120)
 
@@ -256,9 +255,9 @@ class TestUXPrintDeprecations:
         )
 
         # Create different types of deprecations
-        pending = deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-        expired = deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
         console = Console(file=None, width=120)
 
@@ -274,9 +273,9 @@ class TestUXPrintDeprecations:
         )
 
         # Create different types of deprecations
-        pending = deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-        expired = deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
         console = Console(file=None, width=120)
 
@@ -292,9 +291,9 @@ class TestUXPrintDeprecations:
         )
 
         # Create different types of deprecations
-        pending = deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-        expired = deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
         console = Console(file=None, width=120)
 
@@ -310,7 +309,7 @@ class TestUXPrintDeprecations:
         )
 
         # Create a deprecation
-        active = deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
+        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
 
         console = Console(file=None, width=120)
 
@@ -345,7 +344,6 @@ class TestIntegrationWithRealPackage:
             "Integration test deprecation",
             gone_in="999.0.0",
             warn_in="998.0.0",
-            importable_name="deprecator.test_function",
         )
 
         table = create_deprecations_table(dep)
@@ -365,8 +363,14 @@ class TestIntegrationWithRealPackage:
         dep.define("Pending test", gone_in="999.0.0", warn_in="998.0.0")
 
         # Test filtering
-        pending_table = create_deprecations_table(dep, warning_types=PENDING_WARNINGS)
-        all_table = create_deprecations_table(dep, warning_types=ALL_WARNING_TYPES)
+        pending_table = create_deprecations_table(
+            dep,
+            warning_types=get_warning_types(pending=True, active=False, expired=False),
+        )
+        all_table = create_deprecations_table(
+            dep,
+            warning_types=get_warning_types(pending=True, active=True, expired=True),
+        )
 
         # Pending table should have fewer or equal rows than all table
         assert len(pending_table.rows) <= len(all_table.rows)

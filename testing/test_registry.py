@@ -135,11 +135,11 @@ def test_deprecation_tracking() -> None:
     deprecator_instance = registry.for_package("my_package", _version=Version("1.0.0"))
 
     # Define some deprecations - these should be tracked by the deprecator
-    deprecation1 = deprecator_instance.define(
+    deprecator_instance.define(
         "Function foo is deprecated", gone_in="2.0.0", warn_in="1.5.0"
     )
 
-    deprecation2 = deprecator_instance.define(
+    deprecator_instance.define(
         "Class Bar is deprecated", gone_in="3.0.0", warn_in="2.0.0"
     )
 
@@ -148,6 +148,6 @@ def test_deprecation_tracking() -> None:
 
     assert len(tracked_deprecations) == 2
 
-    # Each tracked deprecation should have the warning instance and importable name
-    dep_info1 = next(d for d in tracked_deprecations if "foo" in str(d["warning"]))
-    dep_info2 = next(d for d in tracked_deprecations if "Bar" in str(d["warning"]))
+    # Each tracked deprecation should be a warning instance
+    assert any(d for d in tracked_deprecations if "foo" in str(d))
+    assert any(d for d in tracked_deprecations if "Bar" in str(d))

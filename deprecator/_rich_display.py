@@ -10,10 +10,12 @@ from rich.console import Console
 from rich.table import Table
 
 from ._warnings import (
+    WARNING_TYPES,
     DeprecatorWarningMixing,
     PerPackageDeprecationWarning,
     PerPackageExpiredDeprecationWarning,
     PerPackagePendingDeprecationWarning,
+    get_warning_types,
 )
 
 if TYPE_CHECKING:
@@ -37,24 +39,26 @@ class DeprecationInfo:
 
 
 def filtered_deprecations(
-    deprecator: Deprecator, warning_types: set[type[DeprecatorWarningMixing]]
+    deprecator: Deprecator, warning_types: WARNING_TYPES
 ) -> list[DeprecationInfo]:
     """Get filtered deprecations for a Deprecator instance."""
     return [
         DeprecationInfo(
             warning_type=_get_warning_type_display_name(warning),
-            message=warning.message,
+            message=str(warning),
+            _importable_name=None,  # No importable name tracking anymore
             warn_in=warning.warn_in,
             gone_in=warning.gone_in,
         )
         for warning in deprecator.get_tracked_deprecations()
+        if isinstance(warning, warning_types)
     ]
 
 
 def create_deprecations_table(
     deprecator: Deprecator,
     *,
-    warning_types: set[type[DeprecatorWarningMixing]] | None = None,
+    warning_types: WARNING_TYPES = get_warning_types(),  # NOQA: B008
     title: str | None = None,
 ) -> Table:
     """Create a rich table showing registered deprecations for a Deprecator instance.
@@ -70,9 +74,6 @@ def create_deprecations_table(
     # Default title
     if title is None:
         title = f"Deprecations for {deprecator.name} (v{deprecator.current_version})"
-
-    if warning_types is None:
-        warning_types = ALL_WARNING_TYPES
 
     deprecations = filtered_deprecations(deprecator, warning_types)
 
@@ -102,7 +103,7 @@ def create_deprecations_table(
 def print_deprecations_table(
     deprecator: Deprecator,
     *,
-    warning_types: set[type[DeprecatorWarningMixing]] | None = None,
+    warning_types: WARNING_TYPES = get_warning_types(),  # NOQA: B008
     title: str | None = None,
     console: Console | None = None,
 ) -> None:
@@ -134,24 +135,3 @@ def _get_warning_type_display_name(warning: DeprecatorWarningMixing) -> str:
     else:
         # Fallback to class name
         return warning.__class__.__name__
-
-
-# Convenience constants for common warning type filters
-ALL_WARNING_TYPES = {
-    PerPackagePendingDeprecationWarning,
-    PerPackageDeprecationWarning,
-    PerPackageExpiredDeprecationWarning,
-}
-
-ACTIVE_WARNINGS = {
-    PerPackageDeprecationWarning,
-    PerPackageExpiredDeprecationWarning,
-}
-
-PENDING_WARNINGS = {
-    PerPackagePendingDeprecationWarning,
-}
-
-ERROR_WARNINGS = {
-    PerPackageExpiredDeprecationWarning,
-}

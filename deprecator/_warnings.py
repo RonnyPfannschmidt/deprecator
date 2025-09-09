@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
 from packaging.version import Version
 
 if TYPE_CHECKING:
     from ._deprecator import Deprecator
+
+
+WARNING_TYPES: TypeAlias = "tuple[type[DeprecatorWarningMixing], ...]"
 
 
 class DeprecatorWarningMixing(Warning):
@@ -89,3 +92,22 @@ class PerPackageExpiredDeprecationWarning(DeprecatorWarningMixing, DeprecationWa
     """
 
     github_warning_kind = "error"
+
+
+def get_warning_types(
+    *,
+    pending: bool = False,
+    active: bool = True,
+    expired: bool = True,
+) -> tuple[type[DeprecatorWarningMixing], ...]:
+    warning_types: tuple[type[DeprecatorWarningMixing], ...] = ()
+
+    if pending:
+        warning_types += (PerPackagePendingDeprecationWarning,)
+    if active:
+        warning_types += (PerPackageDeprecationWarning,)
+    if expired:
+        warning_types += (PerPackageExpiredDeprecationWarning,)
+    if not warning_types:
+        raise TypeError("At least one warning type must be selected")
+    return warning_types

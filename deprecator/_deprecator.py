@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import importlib.metadata
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
@@ -15,13 +15,6 @@ from ._warnings import (
 
 if TYPE_CHECKING:
     from ._registry import DeprecatorRegistry
-
-
-class DeprecationInfo(TypedDict):
-    """Information about a tracked deprecation."""
-
-    warning: DeprecatorWarningMixing
-    importable_name: str | None
 
 
 def define_categories(
