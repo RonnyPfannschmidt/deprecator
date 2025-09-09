@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import warnings
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from packaging.version import Version
+
+if TYPE_CHECKING:
+    from ._deprecator import Deprecator
 
 
 class DeprecatorWarningMixing(Warning):
@@ -12,10 +15,7 @@ class DeprecatorWarningMixing(Warning):
     gone_in: ClassVar[Version]
     warn_in: ClassVar[Version]
     current_version: ClassVar[Version]
-
-    def __init_subclass__(cls, *, package_name: str | None = None) -> None:
-        if package_name is not None:
-            cls.package_name = package_name
+    deprecator: ClassVar[Deprecator]
 
     def __init__(self, msg: str) -> None:
         """Initialize warning with message only, like stdlib warnings."""
