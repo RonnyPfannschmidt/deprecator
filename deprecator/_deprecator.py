@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib.metadata
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
@@ -57,12 +56,12 @@ class Deprecator:
         name: PackageName | str,
         current_version: Version,
         *,
-        registry: DeprecatorRegistry | None = None,
+        registry: DeprecatorRegistry,
         definition_module: str | None = None,
     ) -> None:
         self.name = PackageName(name)
         self.current_version = current_version
-        self._registry = registry
+        self.registry = registry
         # Track deprecations in the deprecator itself
         self._tracked_deprecations: list[DeprecatorWarningMixing] = []
         (
@@ -70,20 +69,6 @@ class Deprecator:
             self.DeprecationWarning,
             self.DeprecationError,
         ) = define_categories(self)
-
-    @classmethod
-    def for_package(
-        cls, package_name: PackageName | str, _package_version: Version | None = None
-    ) -> Deprecator:
-        pkg_name = PackageName(package_name)
-        package_version = _package_version or Version(
-            importlib.metadata.version(pkg_name)
-        )
-
-        return Deprecator(
-            pkg_name,
-            package_version,
-        )
 
     def _get_category(
         self, gone_in: Version, warn_in: Version

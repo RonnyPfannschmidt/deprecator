@@ -8,12 +8,13 @@ import pytest
 from packaging.version import Version
 
 from deprecator._deprecator import Deprecator
+from deprecator._registry import default_registry
 
 
 @pytest.fixture
 def deprecator() -> Deprecator:
     """Fixture providing a test deprecator."""
-    return Deprecator.for_package("test_warnings", _package_version=Version("1.0.0"))
+    return Deprecator("test_warnings", Version("1.0.0"), registry=default_registry)
 
 
 def test_warn_default_stacklevel(deprecator: Deprecator) -> None:
@@ -114,8 +115,8 @@ def test_different_warning_categories(deprecator: Deprecator) -> None:
 
 def test_warn_methods_are_instance_methods() -> None:
     """Test that warn methods are available on warning instances."""
-    deprecator = Deprecator.for_package(
-        "test_instance", _package_version=Version("1.0.0")
+    deprecator = Deprecator(
+        "test_instance", Version("1.0.0"), registry=default_registry
     )
     warning = deprecator.define("instance test", warn_in="0.5.0", gone_in="2.0.0")
 
@@ -145,9 +146,7 @@ def test_warn_explicit_pending_warning(deprecator: Deprecator) -> None:
 
 def test_warning_with_replacement_message() -> None:
     """Test that warnings with replacement show proper message."""
-    deprecator = Deprecator.for_package(
-        "test_replace", _package_version=Version("1.0.0")
-    )
+    deprecator = Deprecator("test_replace", Version("1.0.0"), registry=default_registry)
     warning = deprecator.define(
         "old function is deprecated",
         warn_in="0.5.0",

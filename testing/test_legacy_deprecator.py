@@ -9,6 +9,8 @@ import pytest
 
 from deprecator import deprecate
 
+pytestmark = pytest.mark.filterwarnings("ignore:deprecator.deprecate is deprecated")
+
 
 class TestDeprecate:
     """Test the deprecate decorator."""

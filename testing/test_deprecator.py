@@ -2,6 +2,7 @@ import pytest
 from packaging.version import Version
 
 from deprecator._deprecator import Deprecator
+from deprecator._registry import default_registry
 from deprecator._warnings import (
     PerPackageDeprecationWarning,
     PerPackageExpiredDeprecationWarning,
@@ -18,7 +19,7 @@ FUTURE_VERSION = Version("0.2.0")
 @pytest.fixture
 def deprecator() -> Deprecator:
     package_name = "deprecator_test"
-    return Deprecator(package_name, CURRENT_VERSION)
+    return Deprecator(package_name, CURRENT_VERSION, registry=default_registry)
 
 
 def test_deprecator_make_definitions(deprecator: Deprecator) -> None:

@@ -6,71 +6,74 @@ import pytest
 from packaging.version import Version
 from pytest import CaptureFixture
 
-from deprecator import for_package
+from deprecator._registry import DeprecatorRegistry
+from deprecator._types import PackageName
 from deprecator.cli import create_parser, main, print_all_deprecators, print_deprecator
+
+
+@pytest.fixture
+def test_registry() -> DeprecatorRegistry:
+    """Create a test registry with sample deprecators."""
+    registry = DeprecatorRegistry(framework=PackageName("test"))
+
+    # Add a deprecator with active deprecations
+    dep1 = registry.for_package("test_package", _version=Version("2.0.0"))
+    dep1.define("Test deprecation message", gone_in="3.0.0", warn_in="1.5.0")
+
+    # Add another deprecator with active deprecation
+    dep2 = registry.for_package("another_package", _version=Version("1.5.0"))
+    dep2.define("Another deprecation", gone_in="2.0.0", warn_in="1.0.0")
+
+    return registry
+
+
+@pytest.fixture
+def empty_registry() -> DeprecatorRegistry:
+    """Create an empty test registry."""
+    return DeprecatorRegistry(framework=PackageName("test"))
 
 
 class TestPrintDeprecator:
     """Tests for print_deprecator function."""
 
-    def test_print_deprecator_with_deprecations(
-        self, capsys: CaptureFixture[str]
+    def test_with_registry(
+        self, capsys: CaptureFixture[str], test_registry: DeprecatorRegistry
     ) -> None:
-        """Test printing deprecations for a package with deprecations."""
-        # Create a deprecator with some deprecations
-        deprecator = for_package(
-            "test_print_package", _package_version=Version("1.7.0")
-        )
-        deprecator.define("This is deprecated", gone_in="2.0.0", warn_in="1.5.0")
-
-        print_deprecator("test_print_package")
+        """Test printing deprecations using test registry."""
+        print_deprecator("test_package", registry=test_registry)
 
         captured = capsys.readouterr()
-        assert "Deprecations for test_print_package" in captured.out
-        assert "This is deprecated" in captured.out
+        assert "Deprecations for test_package" in captured.out
+        assert "Test deprecation message" in captured.out
 
-    def test_print_deprecator_nonexistent_package(self) -> None:
-        """Test printing deprecations for a non-existent package."""
-        # Should raise an exception (not defensive)
-        with pytest.raises((ImportError, ValueError)):
-            print_deprecator("nonexistent_package_12345")
+    def test_nonexistent_package(self, empty_registry: DeprecatorRegistry) -> None:
+        """Test printing deprecations for non-existent package."""
+        with pytest.raises(SystemExit):
+            print_deprecator("nonexistent_package", registry=empty_registry)
 
 
 class TestPrintAllDeprecators:
     """Tests for print_all_deprecators function."""
 
-    def test_print_all_deprecators_with_multiple_packages(
-        self, capsys: CaptureFixture[str]
+    def test_with_multiple_packages(
+        self, capsys: CaptureFixture[str], test_registry: DeprecatorRegistry
     ) -> None:
-        """Test printing all deprecators when multiple packages exist."""
-        # Create multiple deprecators with deprecations
-        dep1 = for_package("all_test_package1", _package_version=Version("1.0.0"))
-        dep1.define("Deprecation 1", gone_in="2.0.0")
-
-        dep2 = for_package("all_test_package2", _package_version=Version("1.0.0"))
-        dep2.define("Deprecation 2", gone_in="3.0.0")
-
-        print_all_deprecators()
+        """Test printing all deprecators from test registry."""
+        print_all_deprecators(registry=test_registry)
 
         captured = capsys.readouterr()
-        assert "Deprecations for all_test_package1" in captured.out
-        assert "Deprecations for all_test_package2" in captured.out
-        assert "Deprecation 1" in captured.out
-        assert "Deprecation 2" in captured.out
+        assert "Deprecations for test_package" in captured.out
+        assert "Deprecations for another_package" in captured.out
+        assert "Test deprecation message" in captured.out
+        assert "Another deprecation" in captured.out
 
-    def test_print_all_deprecators_empty_registry(
-        self, capsys: CaptureFixture[str]
+    def test_empty_registry(
+        self, capsys: CaptureFixture[str], empty_registry: DeprecatorRegistry
     ) -> None:
         """Test printing all deprecators when registry is empty."""
-        # Clear the registry
-        from deprecator._registry import default_registry
-
-        default_registry._deprecators.clear()
-
-        print_all_deprecators()
+        print_all_deprecators(registry=empty_registry)
 
         captured = capsys.readouterr()
-        # Should just print nothing (no output expected)
         assert captured.out == ""
 
 
@@ -82,56 +85,49 @@ class TestCreateParser:
         parser = create_parser()
 
         assert parser.prog == "deprecator"
-        assert parser.description == "Print deprecation tables"
+        assert parser.description == "Print deprecation tables and manage entrypoints"
 
     def test_parser_with_package_name(self) -> None:
-        """Test parser with package name argument."""
+        """Test parser with package name argument using show subcommand."""
         parser = create_parser()
 
-        args = parser.parse_args(["test_package"])
+        args = parser.parse_args(["show", "test_package"])
+        assert args.command == "show"
         assert args.package_name == "test_package"
 
     def test_parser_without_package_name(self) -> None:
-        """Test parser without package name argument."""
+        """Test parser without package name argument using show subcommand."""
         parser = create_parser()
 
-        args = parser.parse_args([])
+        args = parser.parse_args(["show"])
+        assert args.command == "show"
         assert args.package_name is None
 
 
 class TestMainFunction:
     """Tests for the main function."""
 
-    def test_main_with_package_name(self, capsys: CaptureFixture[str]) -> None:
-        """Test main function with package name."""
-        # Create a test package with deprecations
-        deprecator = for_package("main_test_package", _package_version=Version("1.0.0"))
-        deprecator.define("Test main deprecation", gone_in="2.0.0")
-
-        main(["main_test_package"])
+    def test_show_specific_package(
+        self, capsys: CaptureFixture[str], test_registry: DeprecatorRegistry
+    ) -> None:
+        """Test main function with specific package."""
+        main(["show", "test_package"], registry=test_registry)
 
         captured = capsys.readouterr()
-        assert "Deprecations for main_test_package" in captured.out
-        assert "Test main deprecation" in captured.out
+        assert "Deprecations for test_package" in captured.out
+        assert "Test deprecation message" in captured.out
 
-    def test_main_without_package_name(self, capsys: CaptureFixture[str]) -> None:
-        """Test main function without package name (print all)."""
-        # Create test packages
-        dep1 = for_package("main_all_test1", _package_version=Version("1.0.0"))
-        dep1.define("Test deprecation 1", gone_in="2.0.0")
-
-        dep2 = for_package("main_all_test2", _package_version=Version("1.0.0"))
-        dep2.define("Test deprecation 2", gone_in="3.0.0")
-
-        main([])
+    def test_show_all_packages(
+        self, capsys: CaptureFixture[str], test_registry: DeprecatorRegistry
+    ) -> None:
+        """Test main function showing all packages."""
+        main(["show"], registry=test_registry)
 
         captured = capsys.readouterr()
-        assert "Deprecations for main_all_test1" in captured.out
-        assert "Deprecations for main_all_test2" in captured.out
-        assert "Test deprecation 1" in captured.out
-        assert "Test deprecation 2" in captured.out
+        assert "Deprecations for test_package" in captured.out
+        assert "Deprecations for another_package" in captured.out
 
-    def test_main_with_nonexistent_package(self) -> None:
+    def test_nonexistent_package(self, empty_registry: DeprecatorRegistry) -> None:
         """Test main function with non-existent package."""
-        with pytest.raises((ImportError, ValueError)):
-            main(["nonexistent_package"])
+        with pytest.raises(SystemExit):
+            main(["show", "nonexistent_package"], registry=empty_registry)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 import warnings
 from collections.abc import Iterator
 
@@ -41,8 +42,9 @@ class DeprecatorRegistry:
 
         pkg_name = PackageName(package_name)
         if pkg_name not in self._deprecators:
-            self._deprecators[pkg_name] = Deprecator.for_package(
-                pkg_name, _package_version=_version
+            package_version = _version or Version(importlib.metadata.version(pkg_name))
+            self._deprecators[pkg_name] = Deprecator(
+                pkg_name, package_version, registry=self
             )
 
         res = self._deprecators[pkg_name]

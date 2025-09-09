@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import sys
 import warnings
-from typing import TYPE_CHECKING, ClassVar, TypeAlias
+from typing import TYPE_CHECKING, ClassVar, TypeAlias, TypeVar
 
 from packaging.version import Version
+from typing_extensions import deprecated
 
 if TYPE_CHECKING:
     from ._deprecator import Deprecator
 
 
 WARNING_TYPES: TypeAlias = "tuple[type[DeprecatorWarningMixing], ...]"
+T = TypeVar("T")
 
 
 class DeprecatorWarningMixing(Warning):
@@ -75,6 +77,10 @@ class DeprecatorWarningMixing(Warning):
             lineno=lineno,
             module=module or "__main__",  # Default to __main__ to avoid filtering
         )
+
+    def apply(self, func_or_class: T) -> T:
+        decorator = deprecated(str(self), category=type(self))
+        return decorator(func_or_class)
 
 
 class PerPackagePendingDeprecationWarning(

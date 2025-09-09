@@ -34,6 +34,9 @@ urls.Homepage = "http://github.com/antlong/deprecator"
 [project.entry-points.pytest11]
 deprecator = "deprecator._pytest_plugin"
 
+[project.entry-points."deprecator.registry"]
+deprecator = "deprecator._registry:default_registry"
+
 [project.scripts]
 deprecator = "deprecator.cli:main"
 

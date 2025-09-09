@@ -9,11 +9,11 @@ def test_expired_deprecation_causes_session_failure(pytester: pytest.Pytester) -
     """Test that expired deprecations cause session failure."""
     # Create a test file with an expired deprecation
     pytester.makepyfile("""
-        from deprecator._deprecator import Deprecator
+        from deprecator import for_package
         from packaging.version import Version
 
         def test_expired_warning():
-            deprecator = Deprecator.for_package("test-package", Version("2.0.0"))
+            deprecator = for_package("test-package", _package_version=Version("2.0.0"))
             expired_warning = deprecator.define(
                 "This is expired",
                 warn_in="1.0.0",
@@ -35,11 +35,11 @@ def test_expired_deprecation_with_error_flag_causes_test_failure(
     """Test that expired deprecations cause test failure with --deprecator-error."""
     # Create a test file with an expired deprecation
     pytester.makepyfile("""
-        from deprecator._deprecator import Deprecator
+        from deprecator import for_package
         from packaging.version import Version
 
         def test_expired_warning():
-            deprecator = Deprecator.for_package("test-package", Version("2.0.0"))
+            deprecator = for_package("test-package", _package_version=Version("2.0.0"))
             expired_warning = deprecator.define(
                 "This is expired",
                 warn_in="1.0.0",
@@ -58,11 +58,13 @@ def test_active_deprecation_does_not_cause_failure(pytester: pytest.Pytester) ->
     """Test that active deprecations do not cause failures."""
     # Create a test file with an active deprecation
     pytester.makepyfile("""
-        from deprecator._deprecator import Deprecator
+        from deprecator import for_package
         from packaging.version import Version
 
         def test_active_warning():
-            deprecator = Deprecator.for_package("test-package", Version("1.2.0"))
+            deprecator = for_package(
+                "test-package-active", _package_version=Version("1.2.0")
+            )
             active_warning = deprecator.define(
                 "This is active",
                 warn_in="1.0.0",
@@ -81,11 +83,13 @@ def test_pending_deprecation_does_not_cause_failure(pytester: pytest.Pytester) -
     """Test that pending deprecations do not cause failures."""
     # Create a test file with a pending deprecation
     pytester.makepyfile("""
-        from deprecator._deprecator import Deprecator
+        from deprecator import for_package
         from packaging.version import Version
 
         def test_pending_warning():
-            deprecator = Deprecator.for_package("test-package", Version("0.5.0"))
+            deprecator = for_package(
+                "test-package-pending", _package_version=Version("0.5.0")
+            )
             pending_warning = deprecator.define(
                 "This is pending",
                 warn_in="1.0.0",
@@ -104,11 +108,11 @@ def test_github_annotations_flag_outputs_warnings(pytester: pytest.Pytester) -> 
     """Test that --deprecator-github-annotations outputs GitHub annotations."""
     # Create a test file with both pending and expired deprecations
     pytester.makepyfile("""
-        from deprecator._deprecator import Deprecator
+        from deprecator import for_package
         from packaging.version import Version
 
         def test_warnings():
-            deprecator = Deprecator.for_package("test-package", Version("1.5.0"))
+            deprecator = for_package("test-package", _package_version=Version("1.5.0"))
 
             # Pending deprecation
             pending_warning = deprecator.define(
@@ -143,11 +147,11 @@ def test_github_annotations_auto_enabled_in_github_actions(
     """Test that GitHub annotations are auto-enabled in GitHub Actions CI."""
     # Create a test file with a pending deprecation
     pytester.makepyfile("""
-        from deprecator._deprecator import Deprecator
+        from deprecator import for_package
         from packaging.version import Version
 
         def test_pending_warning():
-            deprecator = Deprecator.for_package("test-package", Version("0.5.0"))
+            deprecator = for_package("test-package", _package_version=Version("0.5.0"))
             pending_warning = deprecator.define(
                 "This is pending",
                 warn_in="1.0.0",
@@ -173,11 +177,11 @@ def test_no_github_annotations_without_flag_or_ci(pytester: pytest.Pytester) -> 
     """Test that no GitHub annotations are output without flag or CI environment."""
     # Create a test file with a pending deprecation
     pytester.makepyfile("""
-        from deprecator._deprecator import Deprecator
+        from deprecator import for_package
         from packaging.version import Version
 
         def test_pending_warning():
-            deprecator = Deprecator.for_package("test-package", Version("0.5.0"))
+            deprecator = for_package("test-package", _package_version=Version("0.5.0"))
             pending_warning = deprecator.define(
                 "This is pending",
                 warn_in="1.0.0",
