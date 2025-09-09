@@ -9,7 +9,7 @@ from deprecator._entrypoints import (
     validate_package_entrypoints,
 )
 from deprecator._registry import DeprecatorRegistry
-from deprecator._types import PackageName
+from deprecator._types import PackageName, is_test_package
 
 
 def test_validate_known_validators() -> None:
@@ -54,4 +54,4 @@ def test_colon_prefix_skips_import_validation() -> None:
 
     # This should work because colon-prefixed packages skip import validation
     assert deprecation is not None
-    assert str(deprecator.name).startswith(":")
+    assert is_test_package(deprecator.name)

@@ -153,19 +153,34 @@ def test_deprecation_tracking() -> None:
 
 
 def test_colon_prefixed_package_handling() -> None:
-    """Test that packages starting with colon are handled for testing."""
+    """Test that packages starting with colon require explicit versions."""
     from deprecator._registry import DeprecatorRegistry
 
     registry = DeprecatorRegistry(framework=PackageName("test-framework"))
 
-    # Test packages starting with colon should work without requiring actual packages
-    test_deprecator = registry.for_package(":test-package")
+    # Test packages starting with colon require explicit version
+    test_deprecator = registry.for_package(":test-package", _version=Version("1.0.0"))
     assert isinstance(test_deprecator, Deprecator)
     assert test_deprecator.name == PackageName(":test-package")
-    assert test_deprecator.current_version == Version("1.0.0")  # Default version
+    assert test_deprecator.current_version == Version("1.0.0")
 
     # Should also work with explicit version
     test_deprecator_v2 = registry.for_package(
         ":another-test", _version=Version("2.0.0")
     )
     assert test_deprecator_v2.current_version == Version("2.0.0")
+
+
+def test_colon_prefixed_package_requires_version() -> None:
+    """Test that colon-prefixed packages require an explicit version."""
+    import pytest
+
+    from deprecator._registry import DeprecatorRegistry
+
+    registry = DeprecatorRegistry(framework=PackageName("test-framework"))
+
+    # Test packages starting with colon should raise ValueError without explicit version
+    with pytest.raises(
+        ValueError, match="Test package ':test-package' requires an explicit version"
+    ):
+        registry.for_package(":test-package")

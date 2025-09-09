@@ -9,7 +9,7 @@ from collections.abc import Iterator
 from packaging.version import Version
 
 from ._deprecator import Deprecator
-from ._types import PackageName
+from ._types import PackageName, is_test_package
 
 
 class DeprecatorRegistry:
@@ -43,9 +43,13 @@ class DeprecatorRegistry:
         pkg_name = PackageName(package_name)
         if pkg_name not in self._deprecators:
             # Special handling for test packages starting with colon
-            if str(pkg_name).startswith(":"):
-                # Use provided version or default to 1.0.0 for test packages
-                package_version = _version or Version("1.0.0")
+            if is_test_package(pkg_name):
+                # Test packages must provide an explicit version
+                if _version is None:
+                    raise ValueError(
+                        f"Test package '{pkg_name}' requires an explicit version"
+                    )
+                package_version = _version
             else:
                 package_version = _version or Version(
                     importlib.metadata.version(pkg_name)

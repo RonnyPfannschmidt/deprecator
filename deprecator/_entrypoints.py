@@ -6,7 +6,7 @@ import importlib
 import importlib.metadata
 from typing import TYPE_CHECKING, Literal
 
-from ._types import PackageName
+from ._types import PackageName, is_test_package, requires_import_validation
 
 if TYPE_CHECKING:
     from ._deprecator import Deprecator
@@ -102,7 +102,7 @@ def validate_deprecator(ep: importlib.metadata.EntryPoint) -> list[str]:
             errors.append(f"Missing importable name for {deprecation}")
         else:
             # Skip import validation for test packages starting with colon
-            if not str(deprecator.name).startswith(":"):
+            if requires_import_validation(deprecator.name):
                 try:
                     importlib.import_module(importable_name)
                 except ImportError as e:
@@ -176,10 +176,10 @@ def validate_package_entrypoints(
     }
 
     # Skip import validation for test packages starting with colon
-    is_test_package = package_name.startswith(":")
+    skip_validation = is_test_package(package_name)
 
     try:
-        if not is_test_package:
+        if not skip_validation:
             dist = importlib.metadata.distribution(package_name)
 
             # Validate deprecator entrypoints
