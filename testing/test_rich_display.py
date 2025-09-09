@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from packaging.version import Version
 from rich.console import Console
 from rich.table import Table
@@ -54,7 +55,7 @@ class TestCreateDeprecationsTable:
 
         table = create_deprecations_table(deprecator)
 
-        assert len(table.rows) == 1
+        assert len(table.rows) == 0  # no active deprecations
         # Check that the table was created successfully
         assert table.title == "Deprecations for test-package (v1.0.0)"
 
@@ -87,7 +88,7 @@ class TestCreateDeprecationsTable:
 
         table = create_deprecations_table(deprecator)
 
-        assert len(table.rows) == 3
+        assert len(table.rows) == 2
         # Verify table was created successfully with the right title
         assert "test-package" in table.title
 
@@ -132,7 +133,7 @@ class TestCreateDeprecationsTable:
     def test_no_importable_name(self) -> None:
         """Test deprecation (importable names no longer tracked)."""
         deprecator = Deprecator.for_package(
-            "test-package", _package_version=Version("1.0.0")
+            "test-package", _package_version=Version("1.6.0")
         )
 
         deprecator.define(
@@ -304,19 +305,9 @@ class TestUXPrintDeprecations:
 
     def test_print_deprecations_none_selected(self) -> None:
         """Test printing when no deprecation types are selected."""
-        deprecator = Deprecator.for_package(
-            "test-package", _package_version=Version("1.5.0")
-        )
 
-        # Create a deprecation
-        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-
-        console = Console(file=None, width=120)
-
-        # Should not raise an exception and should show a message
-        print_deprecations(
-            deprecator, console=console, pending=False, active=False, expired=False
-        )
+        with pytest.raises(TypeError):
+            get_warning_types(pending=False, active=False, expired=False)
 
     def test_print_deprecations_default_console(self) -> None:
         """Test printing with default console."""
@@ -346,7 +337,10 @@ class TestIntegrationWithRealPackage:
             warn_in="998.0.0",
         )
 
-        table = create_deprecations_table(dep)
+        table = create_deprecations_table(
+            dep,
+            warning_types=get_warning_types(pending=True, active=True, expired=True),
+        )
 
         assert isinstance(table, Table)
         assert "deprecator" in table.title
@@ -387,6 +381,7 @@ class TestIntegrationWithRealPackage:
         console = Console(file=None, width=120)
         with console.capture() as capture:
             # Should not raise an exception
-            print_deprecations(dep, console=console)
+            print_deprecations(dep, console=console, pending=True)
 
-        assert "UX test deprecation" in capture.get()
+        print(capture.get())
+        assert "UX test deprecation" in capture.get(), "not found, see print output"

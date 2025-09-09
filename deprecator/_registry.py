@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Iterator
 
 from packaging.version import Version
 
@@ -18,10 +19,13 @@ class DeprecatorRegistry:
     framework: PackageName
     _deprecators: dict[PackageName, Deprecator]
 
-    def __init__(self, *, framework: PackageName | str) -> None:
-        self.framework = PackageName(framework)
+    def __init__(self, *, framework: PackageName) -> None:
+        self.framework = framework
         # Cache deprecators by (package_name, version) tuple
         self._deprecators = {}
+
+    def __iter__(self) -> Iterator[Deprecator]:
+        return iter(self._deprecators.values())
 
     def for_package(
         self, package_name: PackageName | str, *, _version: Version | None = None

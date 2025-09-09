@@ -9,19 +9,23 @@ __all__ = ["PackageName", "deprecate", "for_package", "registry_for_package"]
 
 
 if TYPE_CHECKING:  # pragma: no cover
+    from packaging.version import Version
+
     from ._deprecator import Deprecator
     from ._registry import DeprecatorRegistry
 
 
-def for_package(package_name: PackageName | str) -> Deprecator:
+def for_package(
+    package_name: PackageName | str, _package_version: Version | None = None
+) -> Deprecator:
     """return a deprecator bound to a specific package name and its current version"""
     from ._registry import default_registry
 
-    return default_registry.for_package(package_name)
+    return default_registry.for_package(package_name, _version=_package_version)
 
 
-def registry_for_package(package_name: PackageName | str) -> DeprecatorRegistry:
+def registry_for_framework(framework: PackageName | str) -> DeprecatorRegistry:
     """return a registry bound to a specific package name"""
     from ._registry import DeprecatorRegistry
 
-    return DeprecatorRegistry(framework=package_name)
+    return DeprecatorRegistry(framework=PackageName(framework))

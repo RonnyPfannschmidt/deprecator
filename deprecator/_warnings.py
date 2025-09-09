@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import warnings
 from typing import TYPE_CHECKING, ClassVar, TypeAlias
 
@@ -20,9 +21,17 @@ class DeprecatorWarningMixing(Warning):
     current_version: ClassVar[Version]
     deprecator: ClassVar[Deprecator]
 
-    def __init__(self, msg: str) -> None:
-        """Initialize warning with message only, like stdlib warnings."""
-        super().__init__(msg)
+    _cached_importable_name: str | None = None
+
+    def find_importable_name(self) -> str:
+        if self._cached_importable_name is not None:
+            return self._cached_importable_name
+        for module in sys.modules.values():
+            for attr, value in module.__dict__.items():
+                if value is self:
+                    self._cached_importable_name = f"{module.__name__}.{attr}"
+                    return self._cached_importable_name
+        return "N/A"
 
     def warn(self, *, stacklevel: int = 2) -> None:
         """Emit this warning using the standard warnings system.

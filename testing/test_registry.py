@@ -14,7 +14,7 @@ from deprecator._types import PackageName
 def registry() -> DeprecatorRegistry:
     """Fixture to provide a fresh DeprecatorRegistry instance for each test."""
 
-    return DeprecatorRegistry(framework=":test-example")
+    return DeprecatorRegistry(framework=PackageName("test-example"))
 
 
 def test_deprecator_registry_for_package(registry: DeprecatorRegistry) -> None:
@@ -83,7 +83,7 @@ def test_custom_registry_creation() -> None:
     from deprecator._registry import DeprecatorRegistry
 
     # Create custom registry for a framework
-    framework_registry = DeprecatorRegistry(framework="test-framework")
+    framework_registry = DeprecatorRegistry(framework=PackageName("test-framework"))
 
     # Should be different from default registry
     from deprecator._registry import default_registry
@@ -103,9 +103,9 @@ def test_registry_with_framework_name() -> None:
     from deprecator._registry import DeprecatorRegistry
 
     # Create registries with different framework names
-    django_registry = DeprecatorRegistry(framework="Django")
-    flask_registry = DeprecatorRegistry(framework="Flask")
-    unnamed_registry = DeprecatorRegistry(framework="unnamed")
+    django_registry = DeprecatorRegistry(framework=PackageName("Django"))
+    flask_registry = DeprecatorRegistry(framework=PackageName("Flask"))
+    unnamed_registry = DeprecatorRegistry(framework=PackageName("unnamed"))
 
     # Check framework names
     assert django_registry.framework == PackageName("Django")
@@ -119,8 +119,8 @@ def test_registry_with_framework_name() -> None:
     assert dep1 is not dep2
 
     # Should be tracked separately by each deprecator
-    dep1_tracked = dep1.get_tracked_deprecations()
-    dep2_tracked = dep2.get_tracked_deprecations()
+    dep1_tracked = [*dep1]
+    dep2_tracked = [*dep2]
 
     # They should be independent
     assert len(dep1_tracked) == 0
@@ -131,7 +131,7 @@ def test_deprecation_tracking() -> None:
     """Test that deprecations are tracked by the deprecator itself."""
     from deprecator._registry import DeprecatorRegistry
 
-    registry = DeprecatorRegistry(framework="test-package")
+    registry = DeprecatorRegistry(framework=PackageName("test-package"))
     deprecator_instance = registry.for_package("my_package", _version=Version("1.0.0"))
 
     # Define some deprecations - these should be tracked by the deprecator
@@ -144,8 +144,7 @@ def test_deprecation_tracking() -> None:
     )
 
     # Deprecator should track these deprecations
-    tracked_deprecations = deprecator_instance.get_tracked_deprecations()
-
+    tracked_deprecations = [*deprecator_instance]
     assert len(tracked_deprecations) == 2
 
     # Each tracked deprecation should be a warning instance

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.metadata
+from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 from packaging.version import Version
@@ -147,10 +148,8 @@ class Deprecator:
 
         return warning  # type: ignore[no-any-return]
 
-    def get_tracked_deprecations(self) -> list[DeprecatorWarningMixing]:
-        """Get all tracked deprecations for this deprecator.
-
-        Returns:
-            List of deprecation information for this deprecator
+    def __iter__(self) -> Iterator[DeprecatorWarningMixing]:
         """
-        return self._tracked_deprecations.copy()
+        Return an iterator over the tracked deprecations.
+        """
+        return iter(self._tracked_deprecations)
