@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
-from packaging.version import Version
-from rich.console import Console
+from conftest import (
+    get_test_deprecator,
+    run_with_console_capture,
+)
 from rich.table import Table
 
-from deprecator._deprecator import Deprecator
-from deprecator._registry import default_registry
 from deprecator._rich_display import (
     _get_warning_type_display_name,
     create_deprecations_table,
@@ -17,16 +17,12 @@ from deprecator._rich_display import (
 from deprecator.ux import get_warning_types, print_deprecations
 
 
-def get_deprecator(name: str, version: str) -> Deprecator:
-    return Deprecator(name, Version(version), registry=default_registry)
-
-
 class TestCreateDeprecationsTable:
     """Test the create_deprecations_table function."""
 
     def test_empty_deprecator(self) -> None:
         """Test with a deprecator that has no tracked deprecations."""
-        deprecator = get_deprecator("test-package", "1.0.0")
+        deprecator = get_test_deprecator("test-package", "1.0.0")
 
         table = create_deprecations_table(deprecator)
 
@@ -36,7 +32,7 @@ class TestCreateDeprecationsTable:
 
     def test_custom_title(self) -> None:
         """Test with a custom title."""
-        deprecator = get_deprecator("test-package", "1.0.0")
+        deprecator = get_test_deprecator("test-package", "1.0.0")
         custom_title = "My Custom Deprecations"
 
         table = create_deprecations_table(deprecator, title=custom_title)
@@ -45,7 +41,7 @@ class TestCreateDeprecationsTable:
 
     def test_single_deprecation(self) -> None:
         """Test with a single tracked deprecation."""
-        deprecator = get_deprecator("test-package", "1.0.0")
+        deprecator = get_test_deprecator("test-package", "1.0.0")
 
         # Create a deprecation
         deprecator.define(
@@ -60,7 +56,7 @@ class TestCreateDeprecationsTable:
 
     def test_multiple_deprecations_different_types(self) -> None:
         """Test with multiple deprecations of different types."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
 
         # Pending deprecation (warn_in > current_version)
         deprecator.define(
@@ -91,7 +87,7 @@ class TestCreateDeprecationsTable:
 
     def test_warning_type_filtering_single_type(self) -> None:
         """Test filtering by a single warning type."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
 
         # Create different types of deprecations
         deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
@@ -108,7 +104,7 @@ class TestCreateDeprecationsTable:
 
     def test_warning_type_filtering_multiple_types(self) -> None:
         """Test filtering by multiple warning types."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
 
         # Create different types of deprecations
         deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
@@ -125,7 +121,7 @@ class TestCreateDeprecationsTable:
 
     def test_no_importable_name(self) -> None:
         """Test deprecation (importable names no longer tracked)."""
-        deprecator = get_deprecator("test-package", "1.6.0")
+        deprecator = get_test_deprecator("test-package", "1.6.0")
 
         deprecator.define(
             "This deprecation works fine",
@@ -143,42 +139,35 @@ class TestPrintDeprecationsTable:
 
     def test_print_with_custom_console(self) -> None:
         """Test printing with a custom console."""
-        deprecator = get_deprecator("test-package", "1.0.0")
+        deprecator = get_test_deprecator("test-package", "1.0.0")
         deprecator.define("Test deprecation", gone_in="2.0.0", warn_in="1.5.0")
 
-        # Create a console that captures output
-        console = Console(file=None, width=120)
-
-        # This should not raise an exception
-        print_deprecations_table(deprecator, console=console)
+        # Should not raise an exception and should produce output
+        output = run_with_console_capture(print_deprecations_table, deprecator)
+        assert "test-package" in output
 
     def test_print_with_default_console(self) -> None:
         """Test printing with default console."""
-        deprecator = get_deprecator("test-package", "1.0.0")
+        deprecator = get_test_deprecator("test-package", "1.0.0")
         deprecator.define("Test deprecation", gone_in="2.0.0", warn_in="1.5.0")
 
-        # This should not raise an exception
-        print_deprecations_table(deprecator)
+        # Should not raise an exception and should produce output
+        output = run_with_console_capture(print_deprecations_table, deprecator)
+        assert "test-package" in output
 
     def test_print_with_filtering(self) -> None:
         """Test printing with warning type filtering."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
 
         deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
         deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
 
-        console = Console(file=None, width=120)
-        with console.capture() as capture:
-            # Should not raise an exception
-            print_deprecations_table(
-                deprecator,
-                warning_types=get_warning_types(
-                    pending=True, active=False, expired=False
-                ),
-                console=console,
-            )
-
-        assert "Pending" in capture.get()
+        output = run_with_console_capture(
+            print_deprecations_table,
+            deprecator,
+            warning_types=get_warning_types(pending=True, active=False, expired=False),
+        )
+        assert "Pending" in output
 
 
 class TestWarningTypeDisplayName:
@@ -186,7 +175,7 @@ class TestWarningTypeDisplayName:
 
     def test_pending_deprecation_warning(self) -> None:
         """Test display name for pending deprecation warning."""
-        deprecator = get_deprecator("test-package", "1.0.0")
+        deprecator = get_test_deprecator("test-package", "1.0.0")
         warning = deprecator.define("Test", gone_in="3.0.0", warn_in="2.0.0")
 
         display_name = _get_warning_type_display_name(warning)
@@ -194,7 +183,7 @@ class TestWarningTypeDisplayName:
 
     def test_deprecation_warning(self) -> None:
         """Test display name for deprecation warning."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
         warning = deprecator.define("Test", gone_in="2.0.0", warn_in="1.0.0")
 
         display_name = _get_warning_type_display_name(warning)
@@ -202,7 +191,7 @@ class TestWarningTypeDisplayName:
 
     def test_expired_deprecation_warning(self) -> None:
         """Test display name for expired deprecation warning."""
-        deprecator = get_deprecator("test-package", "2.0.0")
+        deprecator = get_test_deprecator("test-package", "2.0.0")
         warning = deprecator.define("Test", gone_in="1.5.0", warn_in="1.0.0")
 
         display_name = _get_warning_type_display_name(warning)
@@ -214,65 +203,63 @@ class TestUXPrintDeprecations:
 
     def test_print_deprecations_all_types(self) -> None:
         """Test printing all types of deprecations."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
 
         # Create different types of deprecations
         deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
         deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
         deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
-        console = Console(file=None, width=120)
-
-        # Should not raise an exception
-        print_deprecations(deprecator, console=console)
+        # Should not raise an exception and should show active and expired types
+        output = run_with_console_capture(print_deprecations, deprecator)
+        assert "test-package" in output
+        assert "Active" in output  # This should be shown as Warning
+        assert "Expired" in output  # This should be shown as Error
 
     def test_print_deprecations_pending_only(self) -> None:
         """Test printing only pending deprecations."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "0.5.0")  # Earlier version
 
         # Create different types of deprecations
-        deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
-        deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
-        deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
+        deprecator.define("Pending", gone_in="3.0.0", warn_in="1.0.0")  # Future warning
+        deprecator.define("Active", gone_in="2.0.0", warn_in="0.1.0")  # Current warning
+        deprecator.define("Expired", gone_in="0.3.0", warn_in="0.1.0")  # Past expiry
 
-        console = Console(file=None, width=120)
-
-        # Should not raise an exception
-        print_deprecations(
-            deprecator, console=console, pending=True, active=False, expired=False
+        # Should show only pending deprecations
+        output = run_with_console_capture(
+            print_deprecations, deprecator, pending=True, active=False, expired=False
         )
+        assert "Pending" in output
 
     def test_print_deprecations_active_only(self) -> None:
         """Test printing only active deprecations."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
 
         # Create different types of deprecations
         deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
         deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
         deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
-        console = Console(file=None, width=120)
-
-        # Should not raise an exception
-        print_deprecations(
-            deprecator, console=console, pending=False, active=True, expired=False
+        # Should show only active deprecations
+        output = run_with_console_capture(
+            print_deprecations, deprecator, pending=False, active=True, expired=False
         )
+        assert "Active" in output
 
     def test_print_deprecations_expired_only(self) -> None:
         """Test printing only expired deprecations."""
-        deprecator = get_deprecator("test-package", "1.5.0")
+        deprecator = get_test_deprecator("test-package", "1.5.0")
 
         # Create different types of deprecations
         deprecator.define("Pending", gone_in="3.0.0", warn_in="2.0.0")
         deprecator.define("Active", gone_in="2.0.0", warn_in="1.0.0")
         deprecator.define("Expired", gone_in="1.0.0", warn_in="0.5.0")
 
-        console = Console(file=None, width=120)
-
-        # Should not raise an exception
-        print_deprecations(
-            deprecator, console=console, pending=False, active=False, expired=True
+        # Should show only expired deprecations
+        output = run_with_console_capture(
+            print_deprecations, deprecator, pending=False, active=False, expired=True
         )
+        assert "Expired" in output
 
     def test_print_deprecations_none_selected(self) -> None:
         """Test printing when no deprecation types are selected."""
@@ -282,11 +269,12 @@ class TestUXPrintDeprecations:
 
     def test_print_deprecations_default_console(self) -> None:
         """Test printing with default console."""
-        deprecator = get_deprecator("test-package", "1.0.0")
+        deprecator = get_test_deprecator("test-package", "1.0.0")
         deprecator.define("Test deprecation", gone_in="2.0.0", warn_in="1.5.0")
 
-        # Should not raise an exception
-        print_deprecations(deprecator)
+        # Should not raise an exception and should produce output
+        output = run_with_console_capture(print_deprecations, deprecator)
+        assert "test-package" in output
 
 
 class TestIntegrationWithRealPackage:
@@ -347,10 +335,6 @@ class TestIntegrationWithRealPackage:
         # Add some test deprecations
         dep.define("UX test deprecation", gone_in="999.0.0", warn_in="998.0.0")
 
-        console = Console(file=None, width=120)
-        with console.capture() as capture:
-            # Should not raise an exception
-            print_deprecations(dep, console=console, pending=True)
-
-        print(capture.get())
-        assert "UX test deprecation" in capture.get(), "not found, see print output"
+        output = run_with_console_capture(print_deprecations, dep, pending=True)
+        print(output)  # Keep debug print for now
+        assert "UX test deprecation" in output, "not found, see print output"

@@ -1,30 +1,27 @@
 import pytest
+from conftest import TestVersions, get_test_deprecator
 from packaging.version import Version
 
 from deprecator._deprecator import Deprecator
-from deprecator._registry import default_registry
 from deprecator._warnings import (
     PerPackageDeprecationWarning,
     PerPackageExpiredDeprecationWarning,
     PerPackagePendingDeprecationWarning,
 )
 
-CURRENT_VERSION = Version("0.1.0")
-
-PAST_VERSION = Version("0.0.1")
-
-FUTURE_VERSION = Version("0.2.0")
-
 
 @pytest.fixture
 def deprecator() -> Deprecator:
     package_name = "deprecator_test"
-    return Deprecator(package_name, CURRENT_VERSION, registry=default_registry)
+    return get_test_deprecator(package_name, TestVersions.CURRENT)
 
 
 def test_deprecator_make_definitions(deprecator: Deprecator) -> None:
     warning = deprecator.define(
-        "test", gone_in=FUTURE_VERSION, warn_in=PAST_VERSION, replace_with="replacement"
+        "test",
+        gone_in=TestVersions.FUTURE,
+        warn_in=TestVersions.PAST,
+        replace_with="replacement",
     )
     assert isinstance(warning, DeprecationWarning)
     text = str(warning)
@@ -33,7 +30,9 @@ def test_deprecator_make_definitions(deprecator: Deprecator) -> None:
     assert "replacement" in text
     assert "a replacement might be" in text
 
-    warning = deprecator.define("test", gone_in=FUTURE_VERSION, warn_in=PAST_VERSION)
+    warning = deprecator.define(
+        "test", gone_in=TestVersions.FUTURE, warn_in=TestVersions.PAST
+    )
     assert isinstance(warning, DeprecationWarning)
     text = str(warning)
     assert "test" in text
@@ -44,16 +43,22 @@ def test_deprecator_define_error(deprecator: Deprecator) -> None:
     with pytest.raises(
         ValueError, match="gone_in must be greater than or equal to warn_in"
     ):
-        deprecator.define("test", gone_in=PAST_VERSION, warn_in=FUTURE_VERSION)
+        deprecator.define(
+            "test", gone_in=TestVersions.PAST, warn_in=TestVersions.FUTURE
+        )
 
 
 @pytest.mark.parametrize(
     ("gone_in", "warn_in", "expected_category"),
     [
-        (FUTURE_VERSION, PAST_VERSION, PerPackageDeprecationWarning),
-        (FUTURE_VERSION, FUTURE_VERSION, PerPackagePendingDeprecationWarning),
-        (PAST_VERSION, CURRENT_VERSION, PerPackageExpiredDeprecationWarning),
-        (CURRENT_VERSION, CURRENT_VERSION, PerPackageExpiredDeprecationWarning),
+        (TestVersions.FUTURE, TestVersions.PAST, PerPackageDeprecationWarning),
+        (TestVersions.FUTURE, TestVersions.FUTURE, PerPackagePendingDeprecationWarning),
+        (TestVersions.PAST, TestVersions.CURRENT, PerPackageExpiredDeprecationWarning),
+        (
+            TestVersions.CURRENT,
+            TestVersions.CURRENT,
+            PerPackageExpiredDeprecationWarning,
+        ),
     ],
 )
 def test_deprecator_category_specification(
@@ -69,11 +74,11 @@ def test_deprecator_category_specification(
 @pytest.mark.parametrize(
     ("version", "expected_version"),
     [
-        (None, CURRENT_VERSION),
-        (FUTURE_VERSION, FUTURE_VERSION),
-        (PAST_VERSION, PAST_VERSION),
-        (str(PAST_VERSION), PAST_VERSION),
-        (str(FUTURE_VERSION), FUTURE_VERSION),
+        (None, TestVersions.CURRENT),
+        (TestVersions.FUTURE, TestVersions.FUTURE),
+        (TestVersions.PAST, TestVersions.PAST),
+        (str(TestVersions.PAST), TestVersions.PAST),
+        (str(TestVersions.FUTURE), TestVersions.FUTURE),
     ],
 )
 def test_deprecator_parse_version(

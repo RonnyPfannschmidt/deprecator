@@ -2,64 +2,53 @@
 
 from __future__ import annotations
 
-import warnings
-
-import pytest
+from conftest import TestVersions, assert_warnings
 from packaging.version import Version
 
 from deprecator._deprecator import Deprecator
 from deprecator._registry import default_registry
 
 
-@pytest.fixture
-def deprecator() -> Deprecator:
-    """Fixture providing a test deprecator."""
-    return Deprecator("test_warnings", Version("1.0.0"), registry=default_registry)
-
-
-def test_warn_default_stacklevel(deprecator: Deprecator) -> None:
+def test_warn_default_stacklevel(test_deprecator: Deprecator) -> None:
     """Test that warn() works with default stacklevel."""
-    warning = deprecator.define("test warning", warn_in="0.5.0", gone_in="2.0.0")
+    warning = test_deprecator.define(
+        "test warning", warn_in=TestVersions.PAST, gone_in=TestVersions.FUTURE
+    )
 
-    with warnings.catch_warnings(record=True) as warning_list:
-        warnings.simplefilter("always")
+    with assert_warnings(1, type(warning)) as warning_list:
         warning.warn()
 
-    assert len(warning_list) == 1
     caught_warning = warning_list[0]
     assert isinstance(caught_warning.message, type(warning))
     assert str(caught_warning.message) == "test warning"
-    assert issubclass(caught_warning.category, type(warning))
 
 
-def test_warn_custom_stacklevel(deprecator: Deprecator) -> None:
+def test_warn_custom_stacklevel(test_deprecator: Deprecator) -> None:
     """Test that warn() works with custom stacklevel."""
-    warning = deprecator.define("test warning", warn_in="0.5.0", gone_in="2.0.0")
+    warning = test_deprecator.define(
+        "test warning", warn_in=TestVersions.PAST, gone_in=TestVersions.FUTURE
+    )
 
     def wrapper_function() -> None:
         warning.warn(stacklevel=3)  # Skip this wrapper
 
-    with warnings.catch_warnings(record=True) as warning_list:
-        warnings.simplefilter("always")
+    with assert_warnings(1, type(warning)) as warning_list:
         wrapper_function()
 
-    assert len(warning_list) == 1
     caught_warning = warning_list[0]
     assert isinstance(caught_warning.message, type(warning))
     assert str(caught_warning.message) == "test warning"
 
 
-def test_warn_explicit_with_filename_lineno(deprecator: Deprecator) -> None:
+def test_warn_explicit_with_filename_lineno(test_deprecator: Deprecator) -> None:
     """Test that warn_explicit() works with filename and lineno."""
-    warning = deprecator.define(
-        "explicit test warning", warn_in="0.5.0", gone_in="2.0.0"
+    warning = test_deprecator.define(
+        "explicit test warning", warn_in=TestVersions.PAST, gone_in=TestVersions.FUTURE
     )
 
-    with warnings.catch_warnings(record=True) as warning_list:
-        warnings.simplefilter("always")
+    with assert_warnings(1, DeprecationWarning) as warning_list:
         warning.warn_explicit("test_file.py", 42)
 
-    assert len(warning_list) == 1
     caught_warning = warning_list[0]
     assert str(caught_warning.message) == "explicit test warning"
     assert caught_warning.filename == "test_file.py"
@@ -67,15 +56,15 @@ def test_warn_explicit_with_filename_lineno(deprecator: Deprecator) -> None:
     assert caught_warning.category is DeprecationWarning  # Should use stdlib category
 
 
-def test_warn_explicit_with_module(deprecator: Deprecator) -> None:
+def test_warn_explicit_with_module(test_deprecator: Deprecator) -> None:
     """Test that warn_explicit() works with module name."""
-    warning = deprecator.define("module test warning", warn_in="0.5.0", gone_in="2.0.0")
+    warning = test_deprecator.define(
+        "module test warning", warn_in=TestVersions.PAST, gone_in=TestVersions.FUTURE
+    )
 
-    with warnings.catch_warnings(record=True) as warning_list:
-        warnings.simplefilter("always")
+    with assert_warnings(1, DeprecationWarning) as warning_list:
         warning.warn_explicit("test_file.py", 100, module="test_module")
 
-    assert len(warning_list) == 1
     caught_warning = warning_list[0]
     assert str(caught_warning.message) == "module test warning"
     assert caught_warning.filename == "test_file.py"
@@ -83,24 +72,21 @@ def test_warn_explicit_with_module(deprecator: Deprecator) -> None:
     assert caught_warning.category is DeprecationWarning
 
 
-def test_different_warning_categories(deprecator: Deprecator) -> None:
+def test_different_warning_categories(test_deprecator: Deprecator) -> None:
     """Test that different warning categories are emitted correctly."""
     # Pending (future warning)
-    pending_warning = deprecator.define(
-        "pending warning", warn_in="1.5.0", gone_in="2.0.0"
+    pending_warning = test_deprecator.define(
+        "pending warning", warn_in="1.5.0", gone_in=TestVersions.FUTURE
     )
 
     # Active (current warning)
-    active_warning = deprecator.define(
-        "active warning", warn_in="0.5.0", gone_in="2.0.0"
+    active_warning = test_deprecator.define(
+        "active warning", warn_in=TestVersions.PAST, gone_in=TestVersions.FUTURE
     )
 
-    with warnings.catch_warnings(record=True) as warning_list:
-        warnings.simplefilter("always")
+    with assert_warnings(2, Warning) as warning_list:
         pending_warning.warn()
         active_warning.warn()
-
-    assert len(warning_list) == 2
 
     # Check pending warning
     pending_caught = warning_list[0]
@@ -118,7 +104,9 @@ def test_warn_methods_are_instance_methods() -> None:
     deprecator = Deprecator(
         "test_instance", Version("1.0.0"), registry=default_registry
     )
-    warning = deprecator.define("instance test", warn_in="0.5.0", gone_in="2.0.0")
+    warning = deprecator.define(
+        "instance test", warn_in=TestVersions.PAST, gone_in=TestVersions.FUTURE
+    )
 
     # Check that methods exist and are callable
     assert hasattr(warning, "warn")
@@ -127,18 +115,16 @@ def test_warn_methods_are_instance_methods() -> None:
     assert callable(warning.warn_explicit)
 
 
-def test_warn_explicit_pending_warning(deprecator: Deprecator) -> None:
+def test_warn_explicit_pending_warning(test_deprecator: Deprecator) -> None:
     """Test that warn_explicit() works with PendingDeprecationWarning."""
     # Create a pending warning (warn_in is in the future)
-    pending_warning = deprecator.define(
-        "pending test warning", warn_in="1.5.0", gone_in="2.0.0"
+    pending_warning = test_deprecator.define(
+        "pending test warning", warn_in="1.5.0", gone_in=TestVersions.FUTURE
     )
 
-    with warnings.catch_warnings(record=True) as warning_list:
-        warnings.simplefilter("always")
+    with assert_warnings(1, PendingDeprecationWarning) as warning_list:
         pending_warning.warn_explicit("test_file.py", 42)
 
-    assert len(warning_list) == 1
     caught_warning = warning_list[0]
     assert str(caught_warning.message) == "pending test warning"
     assert caught_warning.category is PendingDeprecationWarning
@@ -146,7 +132,9 @@ def test_warn_explicit_pending_warning(deprecator: Deprecator) -> None:
 
 def test_warning_with_replacement_message() -> None:
     """Test that warnings with replacement show proper message."""
-    deprecator = Deprecator("test_replace", Version("1.0.0"), registry=default_registry)
+    from conftest import get_test_deprecator
+
+    deprecator = get_test_deprecator("test_replace", "1.0.0")
     warning = deprecator.define(
         "old function is deprecated",
         warn_in="0.5.0",
@@ -154,11 +142,9 @@ def test_warning_with_replacement_message() -> None:
         replace_with="new_function()",
     )
 
-    with warnings.catch_warnings(record=True) as warning_list:
-        warnings.simplefilter("always")
+    with assert_warnings(1, type(warning)) as warning_list:
         warning.warn()
 
-    assert len(warning_list) == 1
     caught_warning = warning_list[0]
     message = str(caught_warning.message)
     assert "old function is deprecated" in message

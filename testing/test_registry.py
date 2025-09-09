@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from conftest import TestVersions
 from packaging.version import Version
 
 from deprecator._deprecator import Deprecator
@@ -23,13 +24,13 @@ def test_deprecator_registry_for_package(registry: DeprecatorRegistry) -> None:
     package_name = "test_package"
 
     # First call should create a new deprecator
-    deprecator1 = registry.for_package(package_name, _version=Version("1.0.0"))
+    deprecator1 = registry.for_package(package_name, _version=TestVersions.CURRENT)
     assert isinstance(deprecator1, Deprecator)
     assert deprecator1.name == PackageName(package_name)
     assert deprecator1.current_version == Version("1.0.0")
 
     # Second call with same package should return the same instance
-    deprecator2 = registry.for_package(package_name, _version=Version("1.0.0"))
+    deprecator2 = registry.for_package(package_name, _version=TestVersions.CURRENT)
     assert deprecator1 is deprecator2
 
     # Call with different version should create a new instance
@@ -91,8 +92,8 @@ def test_custom_registry_creation() -> None:
     assert framework_registry is not default_registry
 
     # Should work independently
-    dep1 = framework_registry.for_package("my_framework", _version=Version("1.0.0"))
-    dep2 = default_registry.for_package("my_framework", _version=Version("1.0.0"))
+    dep1 = framework_registry.for_package("my_framework", _version=TestVersions.CURRENT)
+    dep2 = default_registry.for_package("my_framework", _version=TestVersions.CURRENT)
 
     # Different registries should create different instances
     assert dep1 is not dep2
@@ -113,8 +114,8 @@ def test_registry_with_framework_name() -> None:
     assert unnamed_registry.framework == PackageName("unnamed")
 
     # Different framework registries should be independent
-    dep1 = django_registry.for_package("web_framework", _version=Version("1.0.0"))
-    dep2 = flask_registry.for_package("web_framework", _version=Version("1.0.0"))
+    dep1 = django_registry.for_package("web_framework", _version=TestVersions.CURRENT)
+    dep2 = flask_registry.for_package("web_framework", _version=TestVersions.CURRENT)
 
     assert dep1 is not dep2
 
@@ -132,7 +133,9 @@ def test_deprecation_tracking() -> None:
     from deprecator._registry import DeprecatorRegistry
 
     registry = DeprecatorRegistry(framework=PackageName("test-package"))
-    deprecator_instance = registry.for_package("my_package", _version=Version("1.0.0"))
+    deprecator_instance = registry.for_package(
+        "my_package", _version=TestVersions.CURRENT
+    )
 
     # Define some deprecations - these should be tracked by the deprecator
     deprecator_instance.define(
@@ -159,7 +162,9 @@ def test_colon_prefixed_package_handling() -> None:
     registry = DeprecatorRegistry(framework=PackageName("test-framework"))
 
     # Test packages starting with colon require explicit version
-    test_deprecator = registry.for_package(":test-package", _version=Version("1.0.0"))
+    test_deprecator = registry.for_package(
+        ":test-package", _version=TestVersions.CURRENT
+    )
     assert isinstance(test_deprecator, Deprecator)
     assert test_deprecator.name == PackageName(":test-package")
     assert test_deprecator.current_version == Version("1.0.0")
