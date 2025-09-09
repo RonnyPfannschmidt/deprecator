@@ -25,7 +25,7 @@ class DeprecatorWarningMixing(Warning):
 
     _cached_importable_name: str | None = None
 
-    def find_importable_name(self) -> str:
+    def find_importable_name(self) -> str | None:
         if self._cached_importable_name is not None:
             return self._cached_importable_name
         for module in sys.modules.values():
@@ -33,7 +33,7 @@ class DeprecatorWarningMixing(Warning):
                 if value is self:
                     self._cached_importable_name = f"{module.__name__}.{attr}"
                     return self._cached_importable_name
-        return "N/A"
+        return None
 
     def warn(self, *, stacklevel: int = 2) -> None:
         """Emit this warning using the standard warnings system.

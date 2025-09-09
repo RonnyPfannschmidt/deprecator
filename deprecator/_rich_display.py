@@ -28,7 +28,7 @@ class DeprecationInfo:
 
     warning_type: str
     message: str
-    importable_name: str
+    importable_name: str | None
     warn_in: Version
     gone_in: Version
 
