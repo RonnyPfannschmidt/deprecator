@@ -11,6 +11,7 @@ from ._entrypoints import (
     find_deprecators_for_package,
     list_packages_with_deprecators,
     list_packages_with_registries,
+    validate_known_validators,
     validate_package_entrypoints,
 )
 from ._registry import DeprecatorRegistry, default_registry
@@ -137,6 +138,23 @@ def validate_package(package_name: str, console: Console | None = None) -> None:
         sys.exit(1)
 
 
+def validate_validators(console: Console | None = None) -> None:
+    """Validate that all known validators have corresponding entrypoints."""
+    console = console or Console()
+
+    errors = validate_known_validators()
+
+    if not errors:
+        console.print(
+            "[green]✓[/green] All known validators have corresponding entrypoints"
+        )
+    else:
+        console.print("[red]Validator validation errors:[/red]")
+        for error in errors:
+            console.print(f"  [red]✗[/red] {error}")
+        sys.exit(1)
+
+
 def list_packages_with_entrypoints(console: Console | None = None) -> None:
     """List all packages that define deprecator or registry entrypoints."""
     console = console or Console()
@@ -203,6 +221,12 @@ def create_parser() -> argparse.ArgumentParser:
         help="List all packages that define deprecator or registry entrypoints",
     )
 
+    # Validate validators command
+    subparsers.add_parser(
+        "validate-validators",
+        help="Validate that all known validators have corresponding entrypoints",
+    )
+
     return parser
 
 
@@ -236,6 +260,8 @@ def main(
         validate_package(parsed_args.package_name, console=console)
     elif parsed_args.command == "list-packages":
         list_packages_with_entrypoints(console=console)
+    elif parsed_args.command == "validate-validators":
+        validate_validators(console=console)
 
 
 if __name__ == "__main__":

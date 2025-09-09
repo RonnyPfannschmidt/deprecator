@@ -42,7 +42,15 @@ class DeprecatorRegistry:
 
         pkg_name = PackageName(package_name)
         if pkg_name not in self._deprecators:
-            package_version = _version or Version(importlib.metadata.version(pkg_name))
+            # Special handling for test packages starting with colon
+            if str(pkg_name).startswith(":"):
+                # Use provided version or default to 1.0.0 for test packages
+                package_version = _version or Version("1.0.0")
+            else:
+                package_version = _version or Version(
+                    importlib.metadata.version(pkg_name)
+                )
+
             self._deprecators[pkg_name] = Deprecator(
                 pkg_name, package_version, registry=self
             )

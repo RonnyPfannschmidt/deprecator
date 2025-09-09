@@ -150,3 +150,22 @@ def test_deprecation_tracking() -> None:
     # Each tracked deprecation should be a warning instance
     assert any(d for d in tracked_deprecations if "foo" in str(d))
     assert any(d for d in tracked_deprecations if "Bar" in str(d))
+
+
+def test_colon_prefixed_package_handling() -> None:
+    """Test that packages starting with colon are handled for testing."""
+    from deprecator._registry import DeprecatorRegistry
+
+    registry = DeprecatorRegistry(framework=PackageName("test-framework"))
+
+    # Test packages starting with colon should work without requiring actual packages
+    test_deprecator = registry.for_package(":test-package")
+    assert isinstance(test_deprecator, Deprecator)
+    assert test_deprecator.name == PackageName(":test-package")
+    assert test_deprecator.current_version == Version("1.0.0")  # Default version
+
+    # Should also work with explicit version
+    test_deprecator_v2 = registry.for_package(
+        ":another-test", _version=Version("2.0.0")
+    )
+    assert test_deprecator_v2.current_version == Version("2.0.0")

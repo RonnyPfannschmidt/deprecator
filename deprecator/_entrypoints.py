@@ -93,12 +93,14 @@ def validate_deprecator(ep: importlib.metadata.EntryPoint) -> list[str]:
         if importable_name is None:
             errors.append(f"Missing importable name for {deprecation}")
         else:
-            try:
-                importlib.import_module(importable_name)
-            except ImportError as e:
-                errors.append(
-                    f"Failed to import {importable_name} for {deprecation}: {e}"
-                )
+            # Skip import validation for test packages starting with colon
+            if not str(deprecator.name).startswith(":"):
+                try:
+                    importlib.import_module(importable_name)
+                except ImportError as e:
+                    errors.append(
+                        f"Failed to import {importable_name} for {deprecation}: {e}"
+                    )
     return errors
 
 
@@ -114,6 +116,37 @@ def validate_registry(ep: importlib.metadata.EntryPoint) -> list[str]:
         )
     elif registry.framework != PackageName(ep.name):
         errors.append(f"Expected framework {ep.name}, got {registry.framework}")
+
+    return errors
+
+
+def validate_known_validators() -> list[str]:
+    """Validate that each known validator has a corresponding entrypoint.
+
+    Returns:
+        List of validation errors - empty list if no errors
+    """
+    errors = []
+
+    # Known validators that should have entrypoints
+    known_validators = {
+        "validate_deprecator": "deprecator.deprecator",
+        "validate_registry": "deprecator.registry",
+    }
+
+    for validator_name, expected_group in known_validators.items():
+        # Check if there are any entrypoints in the expected group
+        try:
+            entrypoints = list(importlib.metadata.entry_points(group=expected_group))
+            if not entrypoints:
+                errors.append(
+                    f"Validator '{validator_name}' expects entrypoints in group "
+                    f"'{expected_group}', but none found"
+                )
+        except Exception as e:
+            errors.append(
+                f"Failed to check entrypoints for validator '{validator_name}': {e}"
+            )
 
     return errors
 
@@ -134,18 +167,26 @@ def validate_package_entrypoints(
         "registry": {},
     }
 
+    # Skip import validation for test packages starting with colon
+    is_test_package = package_name.startswith(":")
+
     try:
-        dist = importlib.metadata.distribution(package_name)
+        if not is_test_package:
+            dist = importlib.metadata.distribution(package_name)
 
-        # Validate deprecator entrypoints
-        for ep in dist.entry_points:
-            if ep.group == "deprecator.deprecator":
-                errors = validate_deprecator(ep)
-                results["deprecator"][ep.name] = errors
+            # Validate deprecator entrypoints
+            for ep in dist.entry_points:
+                if ep.group == "deprecator.deprecator":
+                    errors = validate_deprecator(ep)
+                    results["deprecator"][ep.name] = errors
 
-            elif ep.group == "deprecator.registry":
-                errors = validate_registry(ep)
-                results["registry"][ep.name] = errors
+                elif ep.group == "deprecator.registry":
+                    errors = validate_registry(ep)
+                    results["registry"][ep.name] = errors
+        else:
+            # For test packages starting with colon, we don't require actual entrypoints
+            # but we can still validate the structure if any are provided
+            pass
 
     except importlib.metadata.PackageNotFoundError:
         # For backward compatibility with CLI, we'll handle this differently

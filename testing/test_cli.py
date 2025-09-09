@@ -131,3 +131,12 @@ class TestMainFunction:
         """Test main function with non-existent package."""
         with pytest.raises(SystemExit):
             main(["show", "nonexistent_package"], registry=empty_registry)
+
+    def test_validate_validators_command(self, capsys: CaptureFixture[str]) -> None:
+        """Test validate-validators command."""
+        main(["validate-validators"])
+
+        captured = capsys.readouterr()
+        # Should pass since the deprecator package has the required entrypoints
+        assert "✓" in captured.out
+        assert "All known validators have corresponding entrypoints" in captured.out
