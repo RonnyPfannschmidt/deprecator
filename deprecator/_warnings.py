@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import sys
 import warnings
-from typing import TYPE_CHECKING, ClassVar, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, ClassVar, TypeVar
 
 from packaging.version import Version
 from typing_extensions import deprecated
 
 if TYPE_CHECKING:
+    from typing import TypeAlias
+
     from ._deprecator import Deprecator
 
 
