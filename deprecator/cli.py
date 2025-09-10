@@ -7,6 +7,7 @@ import inspect
 import sys
 
 from rich.console import Console
+from rich.text import Text
 
 from ._entrypoints import (
     find_deprecators_for_package,
@@ -17,6 +18,9 @@ from ._entrypoints import (
 )
 from ._registry import DeprecatorRegistry, default_registry
 from .ux import print_deprecations
+
+RED_CROSS = Text.from_markup("[red bold]:cross_mark:")
+GREEN_CHECK_MARK = Text.from_markup("[green bold]:heavy_check_mark:")
 
 
 def print_deprecator(
@@ -107,19 +111,19 @@ def validate_package(package_name: str, console: Console) -> None:
     # Check deprecator entrypoints
     for name, errors in sorted(results["deprecator"].items()):
         if not errors:
-            console.print(f"[green]✓[/green] deprecator:{name}")
+            console.print(GREEN_CHECK_MARK, f"deprecator:{name}")
             valid_count += 1
         else:
-            console.print(f"[red]✗[/red] deprecator:{name}: {'; '.join(errors)}")
+            console.print(RED_CROSS, "deprecator:{name}: {'; '.join(errors)}")
             invalid_count += 1
 
     # Check registry entrypoints
     for name, errors in sorted(results["registry"].items()):
         if not errors:
-            console.print(f"[green]✓[/green] registry:{name}")
+            console.print(GREEN_CHECK_MARK, f"registry:{name}")
             valid_count += 1
         else:
-            console.print(f"[red]✗[/red] registry:{name}: {'; '.join(errors)}")
+            console.print(RED_CROSS, f"registry:{name}: {'; '.join(errors)}")
             invalid_count += 1
 
     console.print()
@@ -139,12 +143,12 @@ def validate_validators(console: Console) -> None:
 
     if not errors:
         console.print(
-            "[green]✓[/green] All known validators have corresponding entrypoints"
+            GREEN_CHECK_MARK, "All known validators have corresponding entrypoints"
         )
     else:
         console.print("[red]Validator validation errors:[/red]")
         for error in errors:
-            console.print(f"  [red]✗[/red] {error}")
+            console.print(RED_CROSS, f"  {error}")
         raise ValueError(f"Validator validation failed: {len(errors)} errors")
 
 
@@ -280,7 +284,7 @@ def main(
     try:
         handler_func(**handler_kwargs)
     except Exception as e:
-        console.print(f"[red]Error: {e}[/red]")
+        console.print(RED_CROSS, f"Error: {e}")
         sys.exit(1)
 
 

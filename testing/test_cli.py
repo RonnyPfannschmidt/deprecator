@@ -95,7 +95,7 @@ class TestValidateValidators:
         output = run_with_console_capture(validate_validators)
 
         # Should pass since the deprecator package has required entrypoints
-        assert "✓" in output
+        assert "✔" in output
         assert "All known validators have corresponding entrypoints" in output
 
 
@@ -172,5 +172,5 @@ class TestMainFunction:
 
         captured = capsys.readouterr()
         # Should pass since the deprecator package has the required entrypoints
-        assert "✓" in captured.out
+        assert "✔" in captured.out
         assert "All known validators have corresponding entrypoints" in captured.out

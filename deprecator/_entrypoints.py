@@ -104,7 +104,18 @@ def validate_deprecator(ep: importlib.metadata.EntryPoint) -> list[str]:
             # Skip import validation for test packages starting with colon
             if requires_import_validation(deprecator.name):
                 try:
-                    importlib.import_module(importable_name)
+                    # Split module.attribute into module and attribute parts
+                    if "." in importable_name:
+                        module_name, attr_name = importable_name.rsplit(".", 1)
+                        module = importlib.import_module(module_name)
+                        if not hasattr(module, attr_name):
+                            errors.append(
+                                f"Attribute '{attr_name}' "
+                                f"not found in module '{module_name}' for {deprecation}"
+                            )
+                    else:
+                        # If no dot, treat as module name only
+                        importlib.import_module(importable_name)
                 except ImportError as e:
                     errors.append(
                         f"Failed to import {importable_name} for {deprecation}: {e}"
