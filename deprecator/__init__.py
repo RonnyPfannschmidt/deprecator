@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from ._legacy import deprecate
 from ._types import PackageName
 
-__all__ = ["PackageName", "deprecate", "for_package", "registry_for_package"]
+__all__ = ["PackageName", "deprecate", "for_package", "registry_for"]
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -24,7 +24,7 @@ def for_package(
     return default_registry.for_package(package_name, _version=_package_version)
 
 
-def registry_for_framework(framework: PackageName | str) -> DeprecatorRegistry:
+def registry_for(*, framework: PackageName | str) -> DeprecatorRegistry:
     """return a registry bound to a specific package name"""
     from ._registry import DeprecatorRegistry
 

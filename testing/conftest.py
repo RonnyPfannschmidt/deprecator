@@ -54,11 +54,11 @@ def populated_test_registry() -> DeprecatorRegistry:
     registry = DeprecatorRegistry(framework=PackageName("test"))
 
     # Add a deprecator with active deprecations
-    dep1 = registry.for_package("test_package", _version=TestVersions.FUTURE)
+    dep1 = registry.for_package(":test_package", _version=TestVersions.FUTURE)
     dep1.define("Test deprecation message", gone_in="3.0.0", warn_in="1.5.0")
 
     # Add another deprecator with active deprecation
-    dep2 = registry.for_package("another_package", _version=Version("1.5.0"))
+    dep2 = registry.for_package(":another_package", _version=Version("1.5.0"))
     dep2.define("Another deprecation", gone_in="2.0.0", warn_in="1.0.0")
 
     return registry
