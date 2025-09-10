@@ -62,9 +62,23 @@ def find_registry_for_package(package_name: str) -> DeprecatorRegistry | None:
 def list_packages_with_group(group: str) -> list[PackageName]:
     """List all packages that define entrypoints in a specific group."""
     packages: list[PackageName] = []
-    for ep in importlib.metadata.entry_points(group=group):
-        if ep.dist is not None:
-            packages.append(PackageName(ep.dist.name))
+
+    # Handle Python 3.8 vs 3.9+ API differences
+    try:
+        # Python 3.9+ API
+        entry_points = importlib.metadata.entry_points(group=group)
+        for ep in entry_points:
+            if ep.dist is not None:
+                packages.append(PackageName(ep.dist.name))
+    except TypeError:
+        # Python 3.8 API - entry_points() returns a dict and EntryPoint has no .dist
+        # Need to iterate through distributions to find packages with the group
+        for dist in importlib.metadata.distributions():
+            for ep in dist.entry_points:
+                if ep.group == group:
+                    packages.append(PackageName(dist.metadata["Name"]))
+                    break  # Found at least one EP in this group for this package
+
     packages.sort()
     return packages
 
@@ -156,7 +170,17 @@ def validate_known_validators() -> list[str]:
     for validator_name, expected_group in known_validators.items():
         # Check if there are any entrypoints in the expected group
         try:
-            entrypoints = list(importlib.metadata.entry_points(group=expected_group))
+            # Handle Python 3.8 vs 3.9+ API differences
+            try:
+                # Python 3.9+ API
+                entrypoints = list(
+                    importlib.metadata.entry_points(group=expected_group)
+                )
+            except TypeError:
+                # Python 3.8 API - entry_points() returns a dict
+                all_entry_points = importlib.metadata.entry_points()
+                entrypoints = all_entry_points.get(expected_group, [])
+
             if not entrypoints:
                 errors.append(
                     f"Validator '{validator_name}' expects entrypoints in group "
