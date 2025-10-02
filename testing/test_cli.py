@@ -122,19 +122,19 @@ class TestCreateParser:
         assert parser.description == "Print deprecation tables and manage entrypoints"
 
     def test_parser_with_package_name(self) -> None:
-        """Test parser with package name argument using show subcommand."""
+        """Test parser with package name argument using show-registry subcommand."""
         parser = create_parser()
 
-        args = parser.parse_args(["show", "test_package"])
-        assert args.command == "show"
+        args = parser.parse_args(["show-registry", "test_package"])
+        assert args.command == "show-registry"
         assert args.package_name == "test_package"
 
     def test_parser_without_package_name(self) -> None:
-        """Test parser without package name argument using show subcommand."""
+        """Test parser without package name argument using show-registry subcommand."""
         parser = create_parser()
 
-        args = parser.parse_args(["show"])
-        assert args.command == "show"
+        args = parser.parse_args(["show-registry"])
+        assert args.command == "show-registry"
         assert args.package_name is None
 
 
@@ -145,7 +145,7 @@ class TestMainFunction:
         self, capsys: CaptureFixture[str], populated_test_registry: DeprecatorRegistry
     ) -> None:
         """Test main function with specific package."""
-        main(["show", ":test_package"], registry=populated_test_registry)
+        main(["show-registry", ":test_package"], registry=populated_test_registry)
 
         captured = capsys.readouterr()
         assert "Deprecations for :test_package" in captured.out
@@ -155,7 +155,7 @@ class TestMainFunction:
         self, capsys: CaptureFixture[str], populated_test_registry: DeprecatorRegistry
     ) -> None:
         """Test main function showing all packages."""
-        main(["show"], registry=populated_test_registry)
+        main(["show-registry"], registry=populated_test_registry)
 
         captured = capsys.readouterr()
         assert "Deprecations for :test_package" in captured.out
@@ -164,7 +164,7 @@ class TestMainFunction:
     def test_nonexistent_package(self, empty_registry: DeprecatorRegistry) -> None:
         """Test main function with non-existent package."""
         with pytest.raises(SystemExit):
-            main(["show", ":nonexistent_package"], registry=empty_registry)
+            main(["show-registry", ":nonexistent_package"], registry=empty_registry)
 
     def test_validate_validators_command(self, capsys: CaptureFixture[str]) -> None:
         """Test validate-validators command."""

@@ -69,7 +69,7 @@ def test_deprecator_category_specification(
     warn_in: Version,
     expected_category: type[DeprecationWarning],
 ) -> None:
-    category = deprecator._get_category(gone_in, warn_in)
+    category = deprecator._get_warning_class(gone_in, warn_in)
     assert issubclass(category, expected_category)
 
 

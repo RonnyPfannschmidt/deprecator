@@ -314,14 +314,14 @@ Add a CI job to monitor deprecations:
 #!/bin/bash
 # check-deprecations.sh
 
-# Show all deprecations
-deprecator show
+# Show all deprecations from the default registry
+deprecator show-registry
 
 # Validate package configuration
 deprecator validate-package mypackage
 
 # Exit with error if expired deprecations exist
-if deprecator show | grep -q "expired"; then
+if deprecator show-registry | grep -q "expired"; then
     echo "ERROR: Expired deprecations found!"
     exit 1
 fi

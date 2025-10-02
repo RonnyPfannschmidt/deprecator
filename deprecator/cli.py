@@ -212,7 +212,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Show deprecations from default registry
     show_parser = subparsers.add_parser(
-        "show", help="Show deprecations for a package from default registry"
+        "show-registry", help="Show deprecations for a package from default registry"
     )
     show_parser.add_argument(
         "package_name",

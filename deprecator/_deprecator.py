@@ -31,7 +31,7 @@ class Deprecator:
 
     PendingDeprecationWarning: type[PerPackagePendingDeprecationWarning]
     DeprecationWarning: type[PerPackageDeprecationWarning]
-    DeprecationError: type[PerPackageExpiredDeprecationWarning]
+    ExpiredDeprecationWarning: type[PerPackageExpiredDeprecationWarning]
 
     def __init__(
         self,
@@ -40,20 +40,20 @@ class Deprecator:
         *,
         pending: type[PerPackagePendingDeprecationWarning],
         deprecation: type[PerPackageDeprecationWarning],
-        deprecation_error: type[PerPackageExpiredDeprecationWarning],
+        expired_warning: type[PerPackageExpiredDeprecationWarning],
         registry: DeprecatorRegistry | None = None,
     ) -> None:
         self.name = PackageName(name)
         self.current_version = current_version
         self.PendingDeprecationWarning = pending
         self.DeprecationWarning = deprecation
-        self.DeprecationError = deprecation_error
+        self.ExpiredDeprecationWarning = expired_warning
         self._registry = registry
         # Track deprecations in the deprecator itself
         self._tracked_deprecations: list[DeprecationInfo] = []
 
     @classmethod
-    def _define_categories(
+    def _create_warning_classes(
         cls, package_name: PackageName | str, current_version: Version
     ) -> tuple[
         type[PerPackagePendingDeprecationWarning],
@@ -102,7 +102,7 @@ class Deprecator:
         )
 
         PendingDeprecationWarning, DeprecationWarning, DeprecationError = (
-            cls._define_categories(pkg_name, package_version)
+            cls._create_warning_classes(pkg_name, package_version)
         )
 
         return Deprecator(
@@ -110,10 +110,10 @@ class Deprecator:
             package_version,
             pending=PendingDeprecationWarning,
             deprecation=DeprecationWarning,
-            deprecation_error=DeprecationError,
+            expired_warning=DeprecationError,
         )
 
-    def _get_category(
+    def _get_warning_class(
         self, gone_in: Version, warn_in: Version
     ) -> type[
         PerPackageDeprecationWarning
@@ -121,7 +121,7 @@ class Deprecator:
         | PerPackagePendingDeprecationWarning
     ]:
         if gone_in <= self.current_version:
-            return self.DeprecationError
+            return self.ExpiredDeprecationWarning
         if warn_in <= self.current_version:
             return self.DeprecationWarning
         return self.PendingDeprecationWarning
@@ -155,7 +155,7 @@ class Deprecator:
         if gone_in < warn_in:
             raise ValueError("gone_in must be greater than or equal to warn_in")
 
-        base_category = self._get_category(gone_in, warn_in)
+        base_category = self._get_warning_class(gone_in, warn_in)
 
         # Create a specific warning class for this deprecation with its own ClassVars
         # Use the base category name to maintain expected class names

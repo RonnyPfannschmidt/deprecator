@@ -55,8 +55,9 @@ class DeprecatorRegistry:
                     importlib.metadata.version(pkg_name)
                 )
 
-            # Use the private _define_categories method to create the warning classes
-            pending, deprecation, deprecation_error = Deprecator._define_categories(
+            # Use the private _create_warning_classes method to create the
+            # warning classes
+            pending, deprecation, expired_warning = Deprecator._create_warning_classes(
                 pkg_name, package_version
             )
             self._deprecators[pkg_name] = Deprecator(
@@ -64,7 +65,7 @@ class DeprecatorRegistry:
                 package_version,
                 pending=pending,
                 deprecation=deprecation,
-                deprecation_error=deprecation_error,
+                expired_warning=expired_warning,
                 registry=self,
             )
 
