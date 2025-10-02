@@ -33,7 +33,17 @@ class TestVersions:
 @pytest.fixture
 def test_deprecator() -> Deprecator:
     """Standard test deprecator fixture with current version."""
-    return Deprecator("test-package", TestVersions.CURRENT, registry=default_registry)
+    pending, deprecation, deprecation_error = Deprecator._define_categories(
+        "test-package", TestVersions.CURRENT
+    )
+    return Deprecator(
+        "test-package",
+        TestVersions.CURRENT,
+        pending=pending,
+        deprecation=deprecation,
+        deprecation_error=deprecation_error,
+        registry=default_registry,
+    )
 
 
 @pytest.fixture
@@ -190,7 +200,17 @@ def get_test_deprecator(name: str, version: str | Version) -> Deprecator:
     """Factory function for creating test deprecators with custom names/versions."""
     if isinstance(version, str):
         version = Version(version)
-    return Deprecator(name, version, registry=default_registry)
+    pending, deprecation, deprecation_error = Deprecator._define_categories(
+        name, version
+    )
+    return Deprecator(
+        name,
+        version,
+        pending=pending,
+        deprecation=deprecation,
+        deprecation_error=deprecation_error,
+        registry=default_registry,
+    )
 
 
 def assert_console_output_contains(

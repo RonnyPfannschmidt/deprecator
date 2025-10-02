@@ -101,8 +101,16 @@ def test_different_warning_categories(test_deprecator: Deprecator) -> None:
 
 def test_warn_methods_are_instance_methods() -> None:
     """Test that warn methods are available on warning instances."""
+    pending, deprecation, deprecation_error = Deprecator._define_categories(
+        "test_instance", Version("1.0.0")
+    )
     deprecator = Deprecator(
-        "test_instance", Version("1.0.0"), registry=default_registry
+        "test_instance",
+        Version("1.0.0"),
+        pending=pending,
+        deprecation=deprecation,
+        deprecation_error=deprecation_error,
+        registry=default_registry,
     )
     warning = deprecator.define(
         "instance test", warn_in=TestVersions.PAST, gone_in=TestVersions.FUTURE

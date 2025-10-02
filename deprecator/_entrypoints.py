@@ -104,10 +104,10 @@ def validate_deprecator(ep: importlib.metadata.EntryPoint) -> list[str]:
         return errors  # Can't validate further without a proper Deprecator instance
 
     # Validate that entrypoint name matches the registry framework name
-    if ep.name != str(deprecator.registry.framework):
+    if deprecator._registry and ep.name != str(deprecator._registry.framework):
         errors.append(
             f"Entrypoint name '{ep.name}' does not match registry framework "
-            f"'{deprecator.registry.framework}'"
+            f"'{deprecator._registry.framework}'"
         )
 
     for deprecation in deprecator:
