@@ -6,6 +6,42 @@ A framework for managing deprecation warnings with version-aware categorization.
 
 The deprecator package provides a structured approach to handling deprecation warnings in Python packages, automatically categorizing warnings based on version comparisons and providing flexible management of deprecation policies across different packages and frameworks.
 
+## Quick Start
+
+1. Install deprecator with CLI support:
+   ```bash
+   pip install 'deprecator[cli]'
+   ```
+
+2. Initialize deprecator in your project:
+   ```bash
+   deprecator init
+   ```
+   This creates a `_deprecations.py` module and configures your `pyproject.toml`.
+
+3. Define your deprecations:
+   ```python
+   # In _deprecations.py
+   from deprecator import for_package
+
+   deprecator = for_package(__package__)
+
+   OLD_API_DEPRECATION = deprecator.define(
+       "old_api is deprecated, use new_api instead",
+       warn_in="2.0.0",
+       gone_in="3.0.0"
+   )
+   ```
+
+4. Use deprecations in your code:
+   ```python
+   from ._deprecations import OLD_API_DEPRECATION
+
+   @OLD_API_DEPRECATION.apply
+   def old_api():
+       pass
+   ```
+
 ## Architecture
 
 ### Core Components
@@ -48,36 +84,50 @@ from deprecator import for_package
 # Get a deprecator for your package (accepts str or PackageName)
 deprecator = for_package("mypackage")
 
-# Define a deprecation
-my_warning = deprecator.define(
-    "old_function is deprecated",
+# Define a deprecation (using UPPER_CASE for constants)
+OLD_FUNCTION_DEPRECATION = deprecator.define(
+    "old_function is deprecated, use new_function instead",
     warn_in="2.0.0",
     gone_in="3.0.0"
 )
 
-# Use the warning in different ways
+# Method 1: Use as a decorator
+@OLD_FUNCTION_DEPRECATION.apply
 def old_function():
+    # The decorator automatically emits the warning
+    # ... existing functionality
+    pass
+
+# Method 2: Emit warning manually
+def another_old_function():
     # Standard warning (uses stacklevel=2 by default)
-    my_warning.warn()
+    OLD_FUNCTION_DEPRECATION.warn()
     # ... existing functionality
 
+# Method 3: Custom stacklevel for wrapper functions
 def wrapper_function():
     # Custom stacklevel for wrapper functions
-    my_warning.warn(stacklevel=3)
+    OLD_FUNCTION_DEPRECATION.warn(stacklevel=3)
 
+# Method 4: Explicit file/line for tools and linters
 def linter_integration():
     # Explicit file/line for tools and linters
-    my_warning.warn_explicit("myfile.py", 42)
+    OLD_FUNCTION_DEPRECATION.warn_explicit("myfile.py", 42)
 ```
 
 ## Warning Methods
 
-Each deprecation warning instance provides two methods for emitting warnings:
+Each deprecation warning instance provides three methods for using deprecations:
 
+- **`apply`**: Use as a decorator to automatically emit warnings when the decorated function/class is used
 - **`warn(stacklevel=2)`**: Emit warning using the standard warnings system
 - **`warn_explicit(filename, lineno, module=None)`**: Emit warning with explicit location
 
-These mirror the stdlib `warnings.warn()` and `warnings.warn_explicit()` functions.
+The `apply` decorator uses `typing_extensions.deprecated` under the hood, while `warn()` and `warn_explicit()` mirror the stdlib `warnings.warn()` and `warnings.warn_explicit()` functions.
+
+## Cookbook
+
+For practical examples and common patterns, see the [Cookbook](COOKBOOK.md).
 
 ## Testing Structure
 

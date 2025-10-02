@@ -1,4 +1,10 @@
-"""Command line interface for deprecator."""
+"""Command line interface for deprecator.
+
+Exit codes:
+- 0: Success, no issues
+- 1: Expired deprecations or validation failures found
+- 2: Configuration or usage errors
+"""
 
 from __future__ import annotations
 
@@ -16,6 +22,7 @@ from ._entrypoints import (
     validate_known_validators,
     validate_package_entrypoints,
 )
+from ._init_command import init_deprecator
 from ._registry import DeprecatorRegistry, default_registry
 from .ux import print_deprecations
 
@@ -246,6 +253,13 @@ def create_parser() -> argparse.ArgumentParser:
     )
     validate_validators_parser.set_defaults(func=validate_validators)
 
+    # Init command
+    init_parser = subparsers.add_parser(
+        "init",
+        help="Initialize deprecator for the current project",
+    )
+    init_parser.set_defaults(func=init_deprecator)
+
     return parser
 
 
@@ -283,9 +297,17 @@ def main(
     # Dispatch to the appropriate handler with error handling
     try:
         handler_func(**handler_kwargs)
-    except Exception as e:
+    except ValueError as e:
+        # Validation failures or expired deprecations
         console.print(RED_CROSS, f"Error: {e}")
         sys.exit(1)
+    except (SystemExit, KeyboardInterrupt):
+        # Pass through system exits and keyboard interrupts
+        raise
+    except Exception as e:
+        # Configuration or other errors
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(2)
 
 
 if __name__ == "__main__":

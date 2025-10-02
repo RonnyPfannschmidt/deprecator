@@ -16,6 +16,10 @@ authors = [
   { name = "Anthony Long", email = "antlong@gmail.com" },
 ]
 requires-python = ">=3.8"
+dependencies = [
+  "packaging>=20.0",
+  "typing-extensions>=4.0",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -32,6 +36,15 @@ classifiers = [
 
 dynamic = [ "version" ]
 urls.Homepage = "http://github.com/antlong/deprecator"
+
+[project.optional-dependencies]
+cli = [
+  "rich>=10.0",
+  'tomli>=1.0; python_version < "3.11"',
+]
+test = [
+  "pytest>=7",
+]
 
 [project.entry-points.pytest11]
 deprecator = "deprecator._pytest_plugin"
