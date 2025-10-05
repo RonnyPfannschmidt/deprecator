@@ -6,7 +6,7 @@ requires = [ "setuptools>=75", "setuptools-scm>=9" ]
 [project]
 name = "deprecator"
 description = "Deprecator provides a decorator to easily deprecate old code."
-readme = "README.rst"
+readme = "README.md"
 keywords = [ "decorator", "deprecate", "deprecation", "warn", "warning" ]
 license = { text = "Apache 2.0" }
 maintainers = [
@@ -15,11 +15,17 @@ maintainers = [
 authors = [
   { name = "Anthony Long", email = "antlong@gmail.com" },
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.8"
+dependencies = [
+  "packaging>=20.0",
+  "typing-extensions>=4.0",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -30,6 +36,27 @@ classifiers = [
 
 dynamic = [ "version" ]
 urls.Homepage = "http://github.com/antlong/deprecator"
+
+[project.optional-dependencies]
+cli = [
+  "rich>=10.0",
+  'tomli>=1.0; python_version < "3.11"',
+]
+test = [
+  "pytest>=7",
+]
+
+[project.entry-points.pytest11]
+deprecator = "deprecator._pytest_plugin"
+
+[project.entry-points."deprecator.deprecator"]
+deprecator = "deprecator._deprecations:deprecator"
+
+[project.entry-points."deprecator.registry"]
+deprecator = "deprecator._registry:default_registry"
+
+[project.scripts]
+deprecator = "deprecator.cli:main"
 
 [dependency-groups]
 dev = [
@@ -49,6 +76,7 @@ test = [
 packages = [ "deprecator" ]
 
 [tool.ruff]
+preview=true
 format.line-ending = "lf"
 lint.extend-select = [
   "ANN",
@@ -65,21 +93,13 @@ lint.extend-select = [
   "UP",  # pyupgrade
   "W",   # pycodestyle warnings
 ]
+
 lint.future-annotations = true
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --strict-markers --strict-config"
-testpaths = [
-  ".",
-]
-python_files = [
-  "test_*.py",
-  "*_test.py",
-]
-python_functions = [
-  "test_*",
-]
+addopts = "-ra --strict-markers --strict-config --cov-report=term-missing -p pytester"
+testpaths = ["testing"]
 
 [tool.coverage.run]
 source = [ "deprecator" ]

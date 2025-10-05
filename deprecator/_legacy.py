@@ -9,20 +9,21 @@ from functools import wraps
 
 from typing_extensions import ParamSpec, Protocol, TypeVar
 
+from ._deprecations import LEGACY_DEPRECATE
+
 P = ParamSpec("P")
 R = TypeVar("R")
 
-warnings.simplefilter("always", DeprecationWarning)
-
 
 class Decorator(Protocol):
-    def __call__(self, fun: Callable[P, R]) -> Callable[P, R]: ...
+    def __call__(self, fun: Callable[P, R]) -> Callable[P, R]: ...  # pragma: no cover
 
 
 class HasName(Protocol):
     __name__: str
 
 
+@LEGACY_DEPRECATE.apply
 def deprecate(replacement: HasName | None = None) -> Decorator:
     """Prints a deprecation warning when a function is called.
 
