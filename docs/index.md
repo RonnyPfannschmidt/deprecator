@@ -18,22 +18,7 @@ The deprecator package provides a structured approach to handling deprecation wa
 ## Quick Example
 
 ```python
-from deprecator import for_package
-
-# Get a deprecator for your package
-deprecator = for_package("mypackage")
-
-# Define a deprecation
-OLD_API_DEPRECATION = deprecator.define(
-    "old_api is deprecated, use new_api instead",
-    warn_in="2.0.0",
-    gone_in="3.0.0"
-)
-
-# Use as a decorator
-@OLD_API_DEPRECATION.apply
-def old_api():
-    pass
+--8<-- "examples/basic_deprecation.py"
 ```
 
 ## Installation

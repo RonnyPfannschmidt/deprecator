@@ -1,6 +1,46 @@
 # Getting Started
 
-## Installation
+## Quick Start (5 minutes)
+
+Get up and running with deprecator quickly:
+
+### 1. Install
+
+```bash
+pip install 'deprecator[cli]'
+```
+
+### 2. Initialize
+
+Run the initialization command in your project:
+
+```bash
+deprecator init
+```
+
+This creates `_deprecations.py` in your package:
+
+```python
+from deprecator import for_package
+
+deprecator = for_package(__package__)
+```
+
+### 3. Define Your First Deprecation
+
+Add to `_deprecations.py`:
+
+```python
+--8<-- "examples/basic_deprecation.py"
+```
+
+### 4. Test It
+
+```python
+--8<-- "examples/test_deprecation.py"
+```
+
+## Detailed Installation Options
 
 ### Basic Installation
 
@@ -30,7 +70,7 @@ cd deprecator
 
 ## Project Setup
 
-### Quick Setup with CLI
+### Automatic Setup with CLI
 
 The easiest way to set up deprecator in your project is using the CLI:
 
@@ -54,17 +94,7 @@ If you prefer manual setup or need custom configuration:
 1. **Create a deprecations module** (`_deprecations.py`):
 
 ```python
-from deprecator import for_package
-
-# Create a deprecator instance for your package
-deprecator = for_package(__package__)
-
-# Define your deprecations
-OLD_FEATURE_DEPRECATION = deprecator.define(
-    "old_feature is deprecated, use new_feature instead",
-    warn_in="2.0.0",
-    gone_in="3.0.0"
-)
+--8<-- "examples/package_setup.py"
 ```
 
 2. **Configure entry points** in `pyproject.toml`:
@@ -74,45 +104,26 @@ OLD_FEATURE_DEPRECATION = deprecator.define(
 mypackage = "mypackage._deprecations:deprecator"
 ```
 
-## Basic Usage
+## Basic Usage Patterns
 
 ### Deprecating a Function
 
+See the basic example from earlier, or use the decorator pattern:
+
 ```python
-from ._deprecations import OLD_API_DEPRECATION
-
-@OLD_API_DEPRECATION.apply
-def old_api():
-    """This function is deprecated."""
-    return "old implementation"
-
-def new_api():
-    """The new API that replaces old_api."""
-    return "new implementation"
+--8<-- "examples/decorator_usage.py"
 ```
 
 ### Deprecating a Class
 
 ```python
-from ._deprecations import LEGACY_CLASS_DEPRECATION
-
-@LEGACY_CLASS_DEPRECATION.apply
-class LegacyProcessor:
-    """This class is deprecated."""
-    pass
-
-class ModernProcessor:
-    """The replacement for LegacyProcessor."""
-    pass
+--8<-- "examples/class_deprecation.py"
 ```
 
 ### Manual Warning Emission
 
 ```python
-def complex_deprecation():
-    if some_condition:
-        OLD_FEATURE_DEPRECATION.warn()
-    # Rest of the implementation
+--8<-- "examples/manual_warning.py"
 ```
 
 ## Version Management
@@ -125,22 +136,31 @@ Deprecator automatically determines the warning type based on your package versi
 | 2.0.0 | 2.0.0 | 3.0.0 | DeprecationWarning |
 | 3.0.0 | 2.0.0 | 3.0.0 | ExpiredDeprecationWarning |
 
-## Testing Your Deprecations
+## Complete Example
 
-Use pytest to test that deprecations work correctly:
+Here's a complete example of deprecating an old function:
+
+### `mypackage/_deprecations.py`
 
 ```python
-import pytest
-from mypackage._deprecations import OLD_API_DEPRECATION
+--8<-- "examples/package_setup.py"
+```
 
-def test_deprecation_warning():
-    with pytest.warns(type(OLD_API_DEPRECATION)):
-        from mypackage import old_api
-        old_api()
+### `mypackage/api.py`
+
+```python
+--8<-- "examples/decorator_usage.py"
+```
+
+### `tests/test_deprecations.py`
+
+```python
+--8<-- "examples/complete_test.py"
 ```
 
 ## Next Steps
 
-- Learn from [practical examples](cookbook.md)
+- Check the [Cookbook](cookbook.md) for more advanced patterns
+- Learn about [testing deprecations](guides/testing.md) in detail
 - Set up [CI/CD integration](guides/ci-integration.md)
-- Explore the [API reference](api/index.md)
+- Explore the full [API Reference](api/index.md)

@@ -332,7 +332,7 @@ fi
 1. **Define deprecations early**: Add deprecations at least one major version before removal
 2. **Use clear messages**: Explain what's deprecated and what to use instead
 3. **Be consistent with versions**: Follow semantic versioning for `warn_in` and `gone_in`
-4. **Test your deprecations**: Ensure warnings are emitted and upgrades paths work
+4. **Test your deprecations**: Ensure warnings are emitted and upgrade paths work
 5. **Document migrations**: Provide clear migration guides for deprecated features
 6. **Group related deprecations**: Define related deprecations together in `_deprecations.py`
 7. **Monitor in CI**: Use pytest plugin and CLI tools to catch expired deprecations early

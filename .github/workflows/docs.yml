@@ -34,7 +34,7 @@ jobs:
           uv pip install --system -e ".[docs]"
 
       - name: Build documentation
-        run: mkdocs build --strict --verbose
+        run: uv run mkdocs build --strict --verbose
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
