@@ -71,6 +71,11 @@ test = [
   "pytest>=7",
   "pytest-cov>=4",
 ]
+docs = [
+  "mkdocs>=1.5",
+  "mkdocs-material>=9.0",
+  "mkdocstrings[python]>=0.24",
+]
 
 [tool.setuptools]
 packages = [ "deprecator" ]
@@ -130,4 +135,4 @@ warn_unreachable = true
 strict_equality = true
 
 [tool.uv]
-default-groups = [ "dev", "test" ]
+default-groups = [ "dev", "test", "docs" ]
