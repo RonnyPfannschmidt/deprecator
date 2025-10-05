@@ -2,19 +2,42 @@ from __future__ import annotations
 
 import sys
 import warnings
-from typing import TYPE_CHECKING, ClassVar, TypeVar
+from typing import TYPE_CHECKING, ClassVar, Type, TypeVar, Union
 
 from packaging.version import Version
 from typing_extensions import deprecated
+
+__all__ = [
+    "DeprecatorWarningMixing",
+    "PerPackageDeprecationWarning",
+    "PerPackageExpiredDeprecationWarning",
+    "PerPackagePendingDeprecationWarning",
+    "WarningClass",
+    "WarningInstance",
+    "get_warning_types",
+]
 
 if TYPE_CHECKING:
     from typing import TypeAlias
 
     from ._deprecator import Deprecator
 
+T = TypeVar("T")
+
+# Type aliases - define outside TYPE_CHECKING so they can be imported
+WarningInstance = Union[
+    "PerPackagePendingDeprecationWarning",
+    "PerPackageDeprecationWarning",
+    "PerPackageExpiredDeprecationWarning",
+]
+
+WarningClass = Union[
+    Type["PerPackagePendingDeprecationWarning"],
+    Type["PerPackageDeprecationWarning"],
+    Type["PerPackageExpiredDeprecationWarning"],
+]
 
 WARNING_TYPES: TypeAlias = "tuple[type[DeprecatorWarningMixing], ...]"
-T = TypeVar("T")
 
 
 class DeprecatorWarningMixing(Warning):

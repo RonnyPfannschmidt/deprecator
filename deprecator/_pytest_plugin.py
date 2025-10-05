@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import warnings
 from dataclasses import dataclass, field
 
@@ -12,21 +11,6 @@ from ._warnings import (
     DeprecatorWarningMixing,
     PerPackageExpiredDeprecationWarning,
 )
-
-CI_ENV_VARS = (
-    "CI",
-    "CONTINUOUS_INTEGRATION",
-    "GITHUB_ACTIONS",
-    "GITLAB_CI",
-    "JENKINS_URL",
-    "CIRCLECI",
-    "BUILDKITE",
-)
-
-
-def _is_ci_environment() -> bool:
-    """Check if we're running in a CI environment."""
-    return any(os.environ.get(var) for var in CI_ENV_VARS)
 
 
 @dataclass(frozen=True)

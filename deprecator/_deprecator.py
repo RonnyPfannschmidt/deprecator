@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib.metadata
 from collections.abc import Iterator
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, cast
 
 from packaging.version import Version
 
@@ -12,6 +12,8 @@ from ._warnings import (
     PerPackageDeprecationWarning,
     PerPackageExpiredDeprecationWarning,
     PerPackagePendingDeprecationWarning,
+    WarningClass,
+    WarningInstance,
 )
 
 if TYPE_CHECKING:
@@ -113,13 +115,7 @@ class Deprecator:
             expired_warning=DeprecationError,
         )
 
-    def _get_warning_class(
-        self, gone_in: Version, warn_in: Version
-    ) -> type[
-        PerPackageDeprecationWarning
-        | PerPackageExpiredDeprecationWarning
-        | PerPackagePendingDeprecationWarning
-    ]:
+    def _get_warning_class(self, gone_in: Version, warn_in: Version) -> WarningClass:
         if gone_in <= self.current_version:
             return self.ExpiredDeprecationWarning
         if warn_in <= self.current_version:
@@ -141,11 +137,7 @@ class Deprecator:
         replace_with: object | None = None,
         *,
         importable_name: str | None = None,
-    ) -> (
-        PerPackageDeprecationWarning
-        | PerPackageExpiredDeprecationWarning
-        | PerPackagePendingDeprecationWarning
-    ):
+    ) -> WarningInstance:
         gone_in = self._parse_version(gone_in)
         warn_in = self._parse_version(warn_in)
 
@@ -170,14 +162,14 @@ class Deprecator:
             },
         )
 
-        warning = SpecificWarning(message)
-
+        tracked_warning = SpecificWarning(message)
+        assert isinstance(tracked_warning, DeprecatorWarningMixing)
         # Track the deprecation locally
         self._tracked_deprecations.append(
-            DeprecationInfo(warning=warning, importable_name=importable_name)
+            DeprecationInfo(warning=tracked_warning, importable_name=importable_name)
         )
 
-        return warning  # type: ignore[no-any-return]
+        return cast(WarningInstance, tracked_warning)
 
     def get_tracked_deprecations(self) -> list[DeprecationInfo]:
         """Get all tracked deprecations for this deprecator.
@@ -190,3 +182,7 @@ class Deprecator:
     def __iter__(self) -> Iterator[DeprecatorWarningMixing]:
         """Iterate over the tracked deprecation warnings."""
         return (info["warning"] for info in self._tracked_deprecations)
+
+    def __len__(self) -> int:
+        """Get the number of tracked deprecations."""
+        return len(self._tracked_deprecations)

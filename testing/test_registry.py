@@ -58,7 +58,7 @@ def test_for_package_uses_default_registry() -> None:
 
     # Mock the registry to track calls
     original_for_package = default_registry.for_package
-    called_with = []
+    called_with: list[tuple[PackageName | str, Version | None]] = []
 
     def mock_for_package(
         package_name: PackageName | str, *, _version: Version | None = None

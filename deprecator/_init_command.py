@@ -57,20 +57,21 @@ def get_package_info(pyproject_data: dict[str, Any]) -> tuple[str, str] | None:
         Tuple of (package_name, import_name) or None if not found
     """
     project = pyproject_data.get("project", {})
-    package_name = project.get("name")
+    package_name: str | None = project.get("name")
 
     if not package_name:
         return None
 
     # Try to determine the import name
     # First check tool.setuptools.packages
-    tool = pyproject_data.get("tool", {})
-    setuptools = tool.get("setuptools", {})
-    packages = setuptools.get("packages")
+    tool: dict[str, Any] = pyproject_data.get("tool", {})
+    setuptools: dict[str, Any] = tool.get("setuptools", {})
+    packages: list[str] | None | object = setuptools.get("packages")
 
     if packages and isinstance(packages, list) and packages:
         # Use the first package as the import name
         import_name = packages[0]
+        assert isinstance(import_name, str)
     else:
         # Fall back to package name, replacing hyphens with underscores
         import_name = package_name.replace("-", "_")
