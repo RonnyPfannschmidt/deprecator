@@ -1,16 +1,22 @@
 """Complete test example for deprecations."""
 
-import pytest
 from decorator_usage import process_data, transform_data
 from package_setup import PROCESS_DATA_DEPRECATION
 
 
 def test_process_data_deprecated() -> None:
     """Test that process_data emits deprecation warning."""
-    with pytest.warns(
-        type(PROCESS_DATA_DEPRECATION), match=str(PROCESS_DATA_DEPRECATION)
-    ):
+    import warnings
+
+    # Capture warnings
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
         result = process_data("hello")
+
+        # Check that we got a warning
+        assert len(w) == 1
+        assert str(PROCESS_DATA_DEPRECATION) in str(w[0].message)
+
     assert result == "HELLO"
 
 

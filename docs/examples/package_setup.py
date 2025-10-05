@@ -1,9 +1,12 @@
 """Example of package-level deprecation setup."""
 
+from packaging.version import Version
+
 from deprecator import for_package
 
 # Create a deprecator instance for your package
-deprecator = for_package(__package__)
+# For testing, we provide an explicit version since this isn't a real package
+deprecator = for_package(__package__ or "mypackage", _version=Version("1.8.0"))
 
 # Define package-wide deprecations
 OLD_FEATURE_DEPRECATION = deprecator.define(

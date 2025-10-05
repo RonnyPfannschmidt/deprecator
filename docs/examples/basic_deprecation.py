@@ -1,9 +1,12 @@
 """Basic deprecation example."""
 
+from packaging.version import Version
+
 from deprecator import for_package
 
 # Get a deprecator for your package
-deprecator = for_package("mypackage")
+# For testing, we provide an explicit version since "mypackage" isn't installed
+deprecator = for_package("mypackage", _version=Version("2.0.0"))
 
 # Define a deprecation
 OLD_API_DEPRECATION = deprecator.define(
