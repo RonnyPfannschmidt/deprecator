@@ -106,19 +106,22 @@ def test_deprecator_repr() -> None:
 # Version validation tests from test_improvements.py
 def test_define_invalid_version_format(deprecator: Deprecator) -> None:
     """Test that define() raises clear error on invalid version format."""
-    with pytest.raises((InvalidVersion, ValueError)) as exc_info:
+    # Specifically expect InvalidVersion from packaging
+    with pytest.raises(InvalidVersion) as exc_info:
         deprecator.define(
             "Test deprecation",
             gone_in="not.a.valid.version",
             warn_in="1.0.0",
         )
-    # Should have helpful error message
-    assert "version" in str(exc_info.value).lower()
+    # Should have helpful error message about the invalid version
+    error_msg = str(exc_info.value).lower()
+    assert "not.a.valid.version" in error_msg or "invalid" in error_msg
 
 
 def test_define_invalid_warn_in_format(deprecator: Deprecator) -> None:
     """Test that define() validates warn_in version format."""
-    with pytest.raises((InvalidVersion, ValueError)) as exc_info:
+    # Specifically expect InvalidVersion from packaging
+    with pytest.raises(InvalidVersion) as exc_info:
         deprecator.define(
             "Test deprecation",
             gone_in="2.0.0",

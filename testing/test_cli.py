@@ -5,7 +5,6 @@ from __future__ import annotations
 import click.testing
 import pytest
 from conftest import run_with_console_capture
-from pytest import CaptureFixture
 
 # Removed unused imports
 from deprecator._registry import DeprecatorRegistry
@@ -92,6 +91,7 @@ class TestValidateValidators:
         result = runner.invoke(cli, ["validate-validators"])
 
         # Should pass since the deprecator package has required entrypoints
+        assert result.exit_code == 0
         assert "✔" in result.output
         assert "All known validators have corresponding entrypoints" in result.output
 
@@ -105,6 +105,7 @@ class TestListPackagesCommand:
         result = runner.invoke(cli, ["list-packages"])
 
         # Should show the deprecator package
+        assert result.exit_code == 0
         assert "Packages with Deprecator Entrypoints:" in result.output
         assert "deprecator" in result.output
 
@@ -124,69 +125,85 @@ class TestCLI:
     def test_show_registry_with_package(self) -> None:
         """Test show-registry command with package name."""
         runner = click.testing.CliRunner()
-        # This will fail for non-existent package but we're testing the CLI structure
+        # Test with non-existent package - should error appropriately
         result = runner.invoke(cli, ["show-registry", "test_package"])
 
-        # The command should run (even if it errors on the package)
-        # test_package doesn't exist, so we expect an error
-        assert result.exit_code in (1, 2)
-        # Check that error message is present
-        assert "Error:" in result.output or "not found" in result.output
+        # test_package doesn't exist, so we expect a specific error
+        assert result.exit_code == 2  # Configuration error
+        assert "Error:" in result.output
 
     def test_show_registry_without_package(self) -> None:
         """Test show-registry command without package name."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["show-registry"])
 
-        # Should try to show all packages (may be empty)
-        assert result.exit_code in (0, 1)  # May fail if no packages
+        # Should succeed even if no packages have deprecations
+        assert result.exit_code == 0
 
 
 class TestMainFunction:
-    """Tests for the main function."""
+    """Tests for main CLI function behavior."""
 
-    def test_show_specific_package(
-        self, capsys: CaptureFixture[str], populated_test_registry: DeprecatorRegistry
-    ) -> None:
-        """Test main function with specific package."""
-        # Note: main() doesn't accept registry anymore in Click version
-        # This test needs to be updated to work with the new structure
-        runner = click.testing.CliRunner()
-        # Create a mock console that uses the test registry
-        with runner.isolated_filesystem():
-            # This test would need to be restructured for Click
-            pass
-
-    def test_show_all_packages(
-        self, capsys: CaptureFixture[str], populated_test_registry: DeprecatorRegistry
-    ) -> None:
-        """Test main function without specific package."""
-        # Similar to above, needs restructuring for Click
-        runner = click.testing.CliRunner()
-        with runner.isolated_filesystem():
-            pass
-
-    def test_validate_package_command(self) -> None:
-        """Test validate-package command."""
+    def test_validate_package_command_success(self) -> None:
+        """Test validate-package command with existing package."""
         runner = click.testing.CliRunner()
         result = runner.invoke(cli, ["validate-package", "deprecator"])
 
         # Should validate the deprecator package successfully
+        assert result.exit_code == 0
         assert "Validation results for package 'deprecator'" in result.output
 
+    def test_validate_package_command_failure(self) -> None:
+        """Test validate-package command with non-existent package."""
+        runner = click.testing.CliRunner()
+        result = runner.invoke(cli, ["validate-package", "nonexistent-package"])
+
+        # Should fail with appropriate error
+        assert result.exit_code == 1
+        assert "Package 'nonexistent-package' not found" in result.output
+
     def test_init_command(self) -> None:
-        """Test init command."""
+        """Test init command creates proper structure."""
         runner = click.testing.CliRunner()
         with runner.isolated_filesystem():
-            # Create a fake package structure
+            # Create a minimal valid package structure
             import os
 
             os.makedirs("mypackage")
             with open("mypackage/__init__.py", "w") as f:
-                f.write("")
+                f.write('"""Test package."""\n')
+
+            # Create a minimal valid pyproject.toml
             with open("pyproject.toml", "w") as f:
-                f.write("[project]\nname = 'mypackage'\nversion = '0.1.0'\n")
+                f.write("""[project]
+name = "mypackage"
+version = "0.1.0"
+
+[project.entry-points."deprecator.deprecator"]
+mypackage = "mypackage._deprecations:deprecator"
+""")
 
             result = runner.invoke(cli, ["init"])
-            # The init might fail without proper structure but should run
-            assert result.exit_code in (0, 2)  # Success or configuration error
+
+            # Check specific outcomes
+            if result.exit_code == 0:
+                # Success - verify the file was created
+                assert os.path.exists("mypackage/_deprecations.py")
+                with open("mypackage/_deprecations.py") as f:
+                    content = f.read()
+                    assert "for_package" in content
+                    assert "deprecator" in content
+            else:
+                # If it failed, ensure it's for a valid reason
+                assert result.exit_code == 2  # Configuration error
+                # Check for meaningful error message
+                assert "Error:" in result.output or "already exists" in result.output
+
+    def test_show_registry_with_valid_package(self) -> None:
+        """Test show-registry with a package that exists and has deprecations."""
+        runner = click.testing.CliRunner()
+        result = runner.invoke(cli, ["show-registry", "deprecator"])
+
+        # Should succeed and show deprecator's deprecations
+        assert result.exit_code == 0
+        assert "Deprecations for deprecator" in result.output
