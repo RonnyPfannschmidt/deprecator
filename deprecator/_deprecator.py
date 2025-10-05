@@ -14,6 +14,7 @@ from ._warnings import (
     PerPackagePendingDeprecationWarning,
     WarningClass,
     WarningInstance,
+    create_package_warning_classes,
 )
 
 if TYPE_CHECKING:
@@ -55,46 +56,6 @@ class Deprecator:
         self._tracked_deprecations: list[DeprecationInfo] = []
 
     @classmethod
-    def _create_warning_classes(
-        cls, package_name: PackageName | str, current_version: Version
-    ) -> tuple[
-        type[PerPackagePendingDeprecationWarning],
-        type[PerPackageDeprecationWarning],
-        type[PerPackageExpiredDeprecationWarning],
-    ]:
-        pkg_name = PackageName(package_name)
-
-        # Create the warning classes with ClassVars set
-        PendingDeprecationWarning = type(
-            "PendingDeprecationWarning",
-            (PerPackagePendingDeprecationWarning,),
-            {
-                "package_name": pkg_name,
-                "current_version": current_version,
-            },
-        )
-
-        DeprecationWarning = type(
-            "DeprecationWarning",
-            (PerPackageDeprecationWarning,),
-            {
-                "package_name": pkg_name,
-                "current_version": current_version,
-            },
-        )
-
-        DeprecationError = type(
-            "DeprecationError",
-            (PerPackageExpiredDeprecationWarning,),
-            {
-                "package_name": pkg_name,
-                "current_version": current_version,
-            },
-        )
-
-        return PendingDeprecationWarning, DeprecationWarning, DeprecationError
-
-    @classmethod
     def for_package(
         cls, package_name: PackageName | str, _package_version: Version | None = None
     ) -> Deprecator:
@@ -104,7 +65,7 @@ class Deprecator:
         )
 
         PendingDeprecationWarning, DeprecationWarning, DeprecationError = (
-            cls._create_warning_classes(pkg_name, package_version)
+            create_package_warning_classes(pkg_name, package_version)
         )
 
         return Deprecator(

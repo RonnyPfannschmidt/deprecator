@@ -10,6 +10,7 @@ from packaging.version import Version
 
 from ._deprecator import Deprecator
 from ._types import PackageName, is_test_package
+from ._warnings import create_package_warning_classes
 
 
 class DeprecatorRegistry:
@@ -55,9 +56,8 @@ class DeprecatorRegistry:
                     importlib.metadata.version(pkg_name)
                 )
 
-            # Use the private _create_warning_classes method to create the
-            # warning classes
-            pending, deprecation, expired_warning = Deprecator._create_warning_classes(
+            # Create the package-specific warning classes
+            pending, deprecation, expired_warning = create_package_warning_classes(
                 pkg_name, package_version
             )
             self._deprecators[pkg_name] = Deprecator(

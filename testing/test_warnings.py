@@ -7,6 +7,7 @@ from packaging.version import Version
 
 from deprecator._deprecator import Deprecator
 from deprecator._registry import default_registry
+from deprecator._warnings import create_package_warning_classes
 
 
 def test_warn_default_stacklevel(test_deprecator: Deprecator) -> None:
@@ -101,7 +102,7 @@ def test_different_warning_categories(test_deprecator: Deprecator) -> None:
 
 def test_warn_methods_are_instance_methods() -> None:
     """Test that warn methods are available on warning instances."""
-    pending, deprecation, expired_warning = Deprecator._create_warning_classes(
+    pending, deprecation, expired_warning = create_package_warning_classes(
         "test_instance", Version("1.0.0")
     )
     deprecator = Deprecator(

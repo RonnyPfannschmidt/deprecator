@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING, ClassVar, Type, TypeVar, Union
 from packaging.version import Version
 from typing_extensions import deprecated
 
+from ._types import PackageName
+
 __all__ = [
     "DeprecatorWarningMixing",
     "PerPackageDeprecationWarning",
@@ -14,6 +16,7 @@ __all__ = [
     "PerPackagePendingDeprecationWarning",
     "WarningClass",
     "WarningInstance",
+    "create_package_warning_classes",
     "get_warning_types",
 ]
 
@@ -132,6 +135,56 @@ class PerPackageExpiredDeprecationWarning(DeprecatorWarningMixing, DeprecationWa
     """
 
     github_warning_kind = "error"
+
+
+def create_package_warning_classes(
+    package_name: PackageName | str, current_version: Version
+) -> tuple[
+    type[PerPackagePendingDeprecationWarning],
+    type[PerPackageDeprecationWarning],
+    type[PerPackageExpiredDeprecationWarning],
+]:
+    """Create package-specific warning classes with ClassVars set.
+
+    Args:
+        package_name: Name of the package
+        current_version: Current version of the package
+
+    Returns:
+        Tuple of (PendingDeprecationWarning, DeprecationWarning,
+        ExpiredDeprecationWarning) classes
+    """
+    pkg_name = PackageName(package_name)
+
+    # Create the warning classes with ClassVars set
+    PendingDeprecationWarning = type(
+        "PendingDeprecationWarning",
+        (PerPackagePendingDeprecationWarning,),
+        {
+            "package_name": pkg_name,
+            "current_version": current_version,
+        },
+    )
+
+    DeprecationWarning = type(
+        "DeprecationWarning",
+        (PerPackageDeprecationWarning,),
+        {
+            "package_name": pkg_name,
+            "current_version": current_version,
+        },
+    )
+
+    DeprecationError = type(
+        "DeprecationError",
+        (PerPackageExpiredDeprecationWarning,),
+        {
+            "package_name": pkg_name,
+            "current_version": current_version,
+        },
+    )
+
+    return PendingDeprecationWarning, DeprecationWarning, DeprecationError
 
 
 def get_warning_types(

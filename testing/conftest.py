@@ -17,6 +17,7 @@ from deprecator._warnings import (
     PerPackageDeprecationWarning,
     PerPackageExpiredDeprecationWarning,
     PerPackagePendingDeprecationWarning,
+    create_package_warning_classes,
 )
 
 
@@ -33,7 +34,7 @@ class TestVersions:
 @pytest.fixture
 def test_deprecator() -> Deprecator:
     """Standard test deprecator fixture with current version."""
-    pending, deprecation, expired_warning = Deprecator._create_warning_classes(
+    pending, deprecation, expired_warning = create_package_warning_classes(
         "test-package", TestVersions.CURRENT
     )
     return Deprecator(
@@ -200,7 +201,7 @@ def get_test_deprecator(name: str, version: str | Version) -> Deprecator:
     """Factory function for creating test deprecators with custom names/versions."""
     if isinstance(version, str):
         version = Version(version)
-    pending, deprecation, expired_warning = Deprecator._create_warning_classes(
+    pending, deprecation, expired_warning = create_package_warning_classes(
         name, version
     )
     return Deprecator(
