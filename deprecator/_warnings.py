@@ -4,7 +4,7 @@ import sys
 import warnings
 from functools import cached_property
 from types import ModuleType
-from typing import TYPE_CHECKING, ClassVar, Type, TypeVar, Union
+from typing import TYPE_CHECKING, ClassVar, TypeAlias, TypeVar
 
 from packaging.version import Version
 from typing_extensions import deprecated
@@ -24,24 +24,22 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
-
     from ._deprecator import Deprecator
 
 T = TypeVar("T")
 
 # Type aliases - define outside TYPE_CHECKING so they can be imported
-WarningInstance = Union[
-    "PerPackagePendingDeprecationWarning",
-    "PerPackageDeprecationWarning",
-    "PerPackageExpiredDeprecationWarning",
-]
+WarningInstance: TypeAlias = (
+    "PerPackagePendingDeprecationWarning | "
+    "PerPackageDeprecationWarning | "
+    "PerPackageExpiredDeprecationWarning"
+)
 
-WarningClass = Union[
-    Type["PerPackagePendingDeprecationWarning"],
-    Type["PerPackageDeprecationWarning"],
-    Type["PerPackageExpiredDeprecationWarning"],
-]
+WarningClass: TypeAlias = (
+    "type[PerPackagePendingDeprecationWarning] | "
+    "type[PerPackageDeprecationWarning] | "
+    "type[PerPackageExpiredDeprecationWarning]"
+)
 
 WARNING_TYPES: TypeAlias = "tuple[type[DeprecatorWarningMixing], ...]"
 

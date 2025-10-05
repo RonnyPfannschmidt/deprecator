@@ -15,17 +15,14 @@ maintainers = [
 authors = [
   { name = "Anthony Long", email = "antlong@gmail.com" },
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
   "packaging>=20.0",
-  "typing-extensions>=4.0",
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -67,7 +64,6 @@ dev = [
   "ruff>=0.1",
   "twine>=4",
   "types-click>=7.1",
-  "typing-extensions>=4",
 ]
 test = [
   "pytest>=7",

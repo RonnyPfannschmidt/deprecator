@@ -83,7 +83,7 @@ class TestCreateDeprecationsTable:
 
         assert len(table.rows) == 2
         # Verify table was created successfully with the right title
-        assert "test-package" in table.title
+        assert table.title is not None and "test-package" in str(table.title)
 
     def test_warning_type_filtering_single_type(self) -> None:
         """Test filtering by a single warning type."""
@@ -300,7 +300,7 @@ class TestIntegrationWithRealPackage:
         )
 
         assert isinstance(table, Table)
-        assert "deprecator" in table.title
+        assert table.title is not None and "deprecator" in str(table.title)
         # Should have at least our test deprecation
         assert len(table.rows) >= 1
 
