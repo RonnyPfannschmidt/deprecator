@@ -8,11 +8,9 @@ Exit codes:
 
 from __future__ import annotations
 
-import argparse
-import inspect
 import sys
-from typing import Any
 
+import click
 from rich.console import Console
 from rich.text import Text
 
@@ -60,259 +58,230 @@ def print_all_deprecators(
     registry = registry or default_registry
     for deprecator in registry:
         print_deprecations(deprecator, console=console)
-        print()  # Add blank line between tables
+        console.print()  # Add blank line between tables
 
 
-def print_package_deprecators(package_name: str, console: Console) -> None:
-    """Print all deprecators defined by a specific package.
+@click.group()
+@click.version_option()
+@click.pass_context
+def cli(ctx: click.Context) -> None:
+    """Deprecator CLI - Manage deprecation warnings in Python packages."""
+    ctx.ensure_object(Console)
 
-    Args:
-        package_name: Name of the package to show deprecators for
-        console: Console for output
+
+@cli.command()
+@click.pass_obj
+def init(console: Console) -> None:
+    """Initialize deprecator for the current project.
+
+    This creates a _deprecations.py file in your package with a basic setup
+    and configures the necessary entry points in pyproject.toml.
     """
-    deprecators = find_deprecators_for_package(package_name)
-    if not deprecators:
-        console.print(
-            f"[yellow]No deprecators found for package '{package_name}'[/yellow]"
-        )
-        return
+    try:
+        init_deprecator(console)
+    except (SystemExit, KeyboardInterrupt):
+        raise
+    except Exception as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(2)
 
-    console.print(f"[bold]Deprecators from package '{package_name}':[/bold]")
-    console.print()
 
-    for name, deprecator in sorted(deprecators.items()):
-        console.print(f"[bold cyan]Deprecator: {name}[/bold cyan]")
-        print_deprecations(deprecator, console=console)
+@cli.command(name="show-registry")
+@click.argument("package_name", required=False)
+@click.pass_obj
+def show_registry(console: Console, package_name: str | None) -> None:
+    """Show deprecations from the default registry.
+
+    If PACKAGE_NAME is provided, shows deprecations for that specific package.
+    Otherwise, shows all deprecations from all packages in the default registry.
+
+    Examples:
+        deprecator show-registry          # Show all deprecations
+        deprecator show-registry mypackage # Show deprecations for mypackage
+    """
+    try:
+        if package_name:
+            print_deprecator(package_name, console)
+        else:
+            print_all_deprecators(console)
+    except ValueError as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(2)
+
+
+@cli.command(name="show-package")
+@click.argument("package_name")
+@click.pass_obj
+def show_package(console: Console, package_name: str) -> None:
+    """Show all deprecators defined by a specific package.
+
+    This displays all deprecator instances that PACKAGE_NAME has defined
+    through entry points, allowing you to see what deprecations a package
+    contributes to various frameworks.
+    """
+    try:
+        deprecators = find_deprecators_for_package(package_name)
+        if not deprecators:
+            console.print(
+                f"[yellow]No deprecators found for package '{package_name}'[/yellow]"
+            )
+            return
+
+        console.print(f"[bold]Deprecators from package '{package_name}':[/bold]")
         console.print()
 
+        for name, deprecator in sorted(deprecators.items()):
+            console.print(f"[bold cyan]Deprecator: {name}[/bold cyan]")
+            print_deprecations(deprecator, console=console)
+            console.print()
+    except Exception as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(2)
 
-def validate_package(package_name: str, console: Console) -> None:
+
+@cli.command(name="validate-package")
+@click.argument("package_name")
+@click.pass_obj
+def validate_package(console: Console, package_name: str) -> None:
     """Validate all entrypoints defined by a specific package.
 
-    Args:
-        package_name: Name of the package to validate
-        console: Console for output
+    This checks that:
+    - All deprecator entry points are correctly configured
+    - All registry entry points are correctly configured
+    - The referenced objects can be imported
+
+    Exit code 1 if validation fails, 0 if successful.
     """
-    import importlib.metadata
-
     try:
-        importlib.metadata.distribution(package_name)
-    except importlib.metadata.PackageNotFoundError:
-        raise ValueError(f"Package '{package_name}' not found") from None
+        import importlib.metadata
 
-    results = validate_package_entrypoints(package_name)
+        try:
+            importlib.metadata.distribution(package_name)
+        except importlib.metadata.PackageNotFoundError:
+            raise ValueError(f"Package '{package_name}' not found") from None
 
-    total_entrypoints = len(results["deprecator"]) + len(results["registry"])
-    if total_entrypoints == 0:
+        results = validate_package_entrypoints(package_name)
+
+        total_entrypoints = len(results["deprecator"]) + len(results["registry"])
+        if total_entrypoints == 0:
+            console.print(
+                f"[yellow]No deprecator/registry entrypoints found for package "
+                f"'{package_name}'[/yellow]"
+            )
+            return
+
+        console.print(f"[bold]Validation results for package '{package_name}':[/bold]")
+        console.print()
+
+        valid_count = 0
+        invalid_count = 0
+
+        # Check deprecator entrypoints
+        for name, errors in sorted(results["deprecator"].items()):
+            if not errors:
+                console.print(GREEN_CHECK_MARK, f"deprecator:{name}")
+                valid_count += 1
+            else:
+                console.print(RED_CROSS, f"deprecator:{name}: {'; '.join(errors)}")
+                invalid_count += 1
+
+        # Check registry entrypoints
+        for name, errors in sorted(results["registry"].items()):
+            if not errors:
+                console.print(GREEN_CHECK_MARK, f"registry:{name}")
+                valid_count += 1
+            else:
+                console.print(RED_CROSS, f"registry:{name}: {'; '.join(errors)}")
+                invalid_count += 1
+
+        console.print()
         console.print(
-            f"[yellow]No deprecator/registry entrypoints found for package "
-            f"'{package_name}'[/yellow]"
+            f"[bold]Summary:[/bold] {valid_count} valid, {invalid_count} invalid"
         )
-        return
 
-    console.print(f"[bold]Validation results for package '{package_name}':[/bold]")
-    console.print()
+        if invalid_count > 0:
+            raise ValueError(f"Validation failed: {invalid_count} invalid entrypoints")
+    except ValueError as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(2)
 
-    valid_count = 0
-    invalid_count = 0
 
-    # Check deprecator entrypoints
-    for name, errors in sorted(results["deprecator"].items()):
-        if not errors:
-            console.print(GREEN_CHECK_MARK, f"deprecator:{name}")
-            valid_count += 1
+@cli.command(name="list-packages")
+@click.pass_obj
+def list_packages(console: Console) -> None:
+    """List all packages that define deprecator or registry entrypoints.
+
+    This helps you discover which packages in your environment are using
+    deprecator for managing their deprecations.
+    """
+    try:
+        deprecator_packages = list_packages_with_deprecators()
+        registry_packages = list_packages_with_registries()
+
+        if deprecator_packages:
+            console.print("[bold]Packages with Deprecator Entrypoints:[/bold]")
+            for name in sorted(deprecator_packages):
+                console.print(f"  - {name}")
+            console.print()
         else:
-            console.print(RED_CROSS, f"deprecator:{name}: {'; '.join(errors)}")
-            invalid_count += 1
+            console.print(
+                "[yellow]No packages with deprecator entrypoints found[/yellow]"
+            )
 
-    # Check registry entrypoints
-    for name, errors in sorted(results["registry"].items()):
-        if not errors:
-            console.print(GREEN_CHECK_MARK, f"registry:{name}")
-            valid_count += 1
+        if registry_packages:
+            console.print("[bold]Packages with Registry Entrypoints:[/bold]")
+            for name in sorted(registry_packages):
+                console.print(f"  - {name}")
+            console.print()
         else:
-            console.print(RED_CROSS, f"registry:{name}: {'; '.join(errors)}")
-            invalid_count += 1
-
-    console.print()
-    console.print(f"[bold]Summary:[/bold] {valid_count} valid, {invalid_count} invalid")
-
-    if invalid_count > 0:
-        raise ValueError(f"Validation failed: {invalid_count} invalid entrypoints")
+            console.print(
+                "[yellow]No packages with registry entrypoints found[/yellow]"
+            )
+    except Exception as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(2)
 
 
+@cli.command(name="validate-validators", hidden=True)
+@click.pass_obj
 def validate_validators(console: Console) -> None:
     """Validate that all known validators have corresponding entrypoints.
 
-    Args:
-        console: Console for output
+    This is an internal command used for testing and validation.
     """
-    errors = validate_known_validators()
+    try:
+        errors = validate_known_validators()
 
-    if not errors:
-        console.print(
-            GREEN_CHECK_MARK, "All known validators have corresponding entrypoints"
-        )
-    else:
-        console.print("[red]Validator validation errors:[/red]")
-        for error in errors:
-            console.print(RED_CROSS, f"  {error}")
-        raise ValueError(f"Validator validation failed: {len(errors)} errors")
-
-
-def list_packages_with_entrypoints(console: Console) -> None:
-    """List all packages that define deprecator or registry entrypoints.
-
-    Args:
-        console: Console for output
-    """
-    deprecator_packages = list_packages_with_deprecators()
-    registry_packages = list_packages_with_registries()
-
-    if deprecator_packages:
-        console.print("[bold]Packages with Deprecator Entrypoints:[/bold]")
-        for name in deprecator_packages:
-            console.print(f"  - {name}")
-        console.print()
-    else:
-        console.print("[yellow]No packages with deprecator entrypoints found[/yellow]")
-
-    if registry_packages:
-        console.print("[bold]Packages with Registry Entrypoints:[/bold]")
-        for name in registry_packages:
-            console.print(f"  - {name}")
-        console.print()
-    else:
-        console.print("[yellow]No packages with registry entrypoints found[/yellow]")
+        if not errors:
+            console.print(
+                GREEN_CHECK_MARK, "All known validators have corresponding entrypoints"
+            )
+        else:
+            console.print("[red]Validator validation errors:[/red]")
+            for error in errors:
+                console.print(RED_CROSS, f"  {error}")
+            raise ValueError(f"Validator validation failed: {len(errors)} errors")
+    except ValueError as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        console.print(RED_CROSS, f"Error: {e}")
+        sys.exit(2)
 
 
-def _handle_show_command(
-    console: Console,
-    package_name: str | None = None,
-    registry: DeprecatorRegistry | None = None,
-    **kwargs: object,
-) -> None:
-    """Handle the show command with conditional logic for package_name."""
-    if package_name:
-        print_deprecator(
-            package_name=package_name, console=console, registry=registry, **kwargs
-        )
-    else:
-        print_all_deprecators(console=console, registry=registry, **kwargs)
-
-
-def create_parser() -> argparse.ArgumentParser:
-    """Create the argument parser for the CLI."""
-    parser = argparse.ArgumentParser(
-        prog="deprecator", description="Print deprecation tables and manage entrypoints"
-    )
-
-    subparsers = parser.add_subparsers(
-        dest="command", help="Available commands", required=True
-    )
-
-    # Show deprecations from default registry
-    show_parser = subparsers.add_parser(
-        "show-registry", help="Show deprecations for a package from default registry"
-    )
-    show_parser.add_argument(
-        "package_name",
-        nargs="?",
-        help=(
-            "Package name to show deprecations for. "
-            "If not provided, shows all packages from default registry."
-        ),
-    )
-    show_parser.set_defaults(func=_handle_show_command)
-
-    # Show all deprecators from a package
-    package_parser = subparsers.add_parser(
-        "show-package", help="Show all deprecators defined by a specific package"
-    )
-    package_parser.add_argument("package_name", help="Name of the package")
-    package_parser.set_defaults(func=print_package_deprecators)
-
-    # Validate package entrypoints
-    validate_parser = subparsers.add_parser(
-        "validate-package",
-        help="Validate all entrypoints defined by a specific package",
-    )
-    validate_parser.add_argument("package_name", help="Name of the package to validate")
-    validate_parser.set_defaults(func=validate_package)
-
-    # List packages command
-    list_parser = subparsers.add_parser(
-        "list-packages",
-        help="List all packages that define deprecator or registry entrypoints",
-    )
-    list_parser.set_defaults(func=list_packages_with_entrypoints)
-
-    # Validate validators command
-    validate_validators_parser = subparsers.add_parser(
-        "validate-validators",
-        help="Validate that all known validators have corresponding entrypoints",
-    )
-    validate_validators_parser.set_defaults(func=validate_validators)
-
-    # Init command
-    init_parser = subparsers.add_parser(
-        "init",
-        help="Initialize deprecator for the current project",
-    )
-    init_parser.set_defaults(func=init_deprecator)
-
-    return parser
-
-
-def main(
-    args: list[str] | None = None,
-    console: Console | None = None,
-    registry: DeprecatorRegistry | None = None,
-) -> None:
+def main(args: list[str] | None = None) -> None:
     """Main CLI entry point.
 
     Args:
-        args: Command line arguments
-        console: Optional console for output
-        registry: Optional registry to use (defaults to default_registry)
+        args: Command line arguments (for testing)
     """
-    console = console or Console()
-    parser = create_parser()
-    parsed_args = parser.parse_args(args)
-
-    # Get the handler function
-    handler_func = parsed_args.func
-
-    # Build kwargs with all available parameters
-    all_kwargs: dict[str, Any] = {
-        **vars(parsed_args),
-        "console": console,
-        "registry": registry,
-    }
-    # Remove argparse-specific fields that aren't function parameters
-    all_kwargs.pop("func", None)
-    all_kwargs.pop("command", None)
-
-    # Filter kwargs to only include parameters the function accepts
-    sig = inspect.signature(handler_func)
-    handler_kwargs = {
-        key: value for key, value in all_kwargs.items() if key in sig.parameters
-    }
-
-    # Dispatch to the appropriate handler with error handling
-    try:
-        handler_func(**handler_kwargs)
-    except ValueError as e:
-        # Validation failures or expired deprecations
-        console.print(RED_CROSS, f"Error: {e}")
-        sys.exit(1)
-    except (SystemExit, KeyboardInterrupt):
-        # Pass through system exits and keyboard interrupts
-        raise
-    except Exception as e:
-        # Configuration or other errors
-        console.print(RED_CROSS, f"Error: {e}")
-        sys.exit(2)
+    cli(args or sys.argv[1:], standalone_mode=False)
 
 
 if __name__ == "__main__":

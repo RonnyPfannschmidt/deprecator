@@ -39,6 +39,7 @@ urls.Homepage = "http://github.com/antlong/deprecator"
 
 [project.optional-dependencies]
 cli = [
+  "click>=8.0",
   "rich>=10.0",
   'tomli>=1.0; python_version < "3.11"',
 ]
@@ -65,6 +66,7 @@ dev = [
   "pre-commit>=3",
   "ruff>=0.1",
   "twine>=4",
+  "types-click>=7.1",
   "typing-extensions>=4",
 ]
 test = [
@@ -75,6 +77,7 @@ docs = [
   "mkdocs>=1.5",
   "mkdocs-material>=9.0",
   "mkdocstrings[python]>=0.24",
+  "mkdocs-click>=0.8",
 ]
 
 [tool.setuptools]

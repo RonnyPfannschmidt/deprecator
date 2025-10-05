@@ -75,6 +75,7 @@ plugins:
             show_signature_annotations: true
 
 markdown_extensions:
+  - mkdocs-click
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span

@@ -1,6 +1,6 @@
 # CLI Tool Reference
 
-The deprecator CLI provides basic commands for initializing and inspecting deprecations.
+The deprecator CLI provides commands for initializing and inspecting deprecations in your projects.
 
 ## Installation
 
@@ -8,11 +8,20 @@ The deprecator CLI provides basic commands for initializing and inspecting depre
 pip install 'deprecator[cli]'
 ```
 
-## Main Commands
+## Command Reference
 
-### `deprecator init`
+::: mkdocs-click
+    :module: deprecator.cli
+    :command: cli
+    :prog_name: deprecator
+    :depth: 2
+    :style: table
 
-Initialize deprecator in your project:
+## Usage Examples
+
+### Initialize Deprecator
+
+Initialize deprecator in your current project:
 
 ```bash
 deprecator init
@@ -20,16 +29,16 @@ deprecator init
 
 This creates a `_deprecations.py` file in your package with a basic setup.
 
-### `deprecator show-registry`
+### Show Registry Deprecations
 
-Display deprecations in a readable format:
+Display deprecations from the default registry:
 
 ```bash
-# Show all deprecations
+# Show all deprecations from all packages
 deprecator show-registry
 
-# Show as JSON
-deprecator show-registry --format json
+# Show deprecations for a specific package
+deprecator show-registry mypackage
 ```
 
 Example output:
@@ -39,7 +48,17 @@ Package     | Message                  | Warn In | Gone In | Status
 mypackage   | old_api deprecated      | 2.0.0   | 3.0.0   | Active
 ```
 
-### `deprecator validate-package`
+### Show Package Deprecators
+
+Display all deprecators defined by a specific package:
+
+```bash
+deprecator show-package mypackage
+```
+
+This shows all deprecator instances that a package has defined through entry points.
+
+### Validate Package
 
 Check if a package's deprecation setup is valid:
 
@@ -47,36 +66,61 @@ Check if a package's deprecation setup is valid:
 deprecator validate-package mypackage
 ```
 
-## pytest Integration
+This validates:
+- All deprecator entry points are correctly configured
+- All registry entry points are correctly configured
+- The referenced objects can be imported
 
-The main pytest feature is GitHub annotations:
+### List Packages
+
+List all packages that have deprecator or registry entry points:
 
 ```bash
-# Add annotations to GitHub PRs (recommended)
+deprecator list-packages
+```
+
+## pytest Integration
+
+The deprecator pytest plugin provides GitHub annotations and strict mode:
+
+```bash
+# Add annotations to GitHub PRs (recommended for CI)
 pytest --deprecator-github-annotations
 
-# Strict mode (use sparingly)
+# Strict mode - treat deprecations as errors (use sparingly)
 pytest --deprecator-error
 ```
 
-## That's It!
+## Exit Codes
 
-Deprecator is designed to be simple. You don't need:
+The CLI uses the following exit codes:
 
-- Complex validation scripts
-- Custom report generators
-- Pre-commit hooks for deprecations
-- Programmatic CLI usage
-
-The commands above cover 99% of use cases. The version-based system handles everything else automatically.
+| Code | Meaning |
+|------|---------|
+| 0 | Success, no issues found |
+| 1 | Validation failures or expired deprecations found |
+| 2 | Configuration or usage errors |
 
 ## Common Issues
 
 | Issue | Solution |
 |-------|----------|
-| "Package not found" | Make sure the package is installed |
-| "No entry point configured" | Run `deprecator init` |
+| "Package not found" | Make sure the package is installed in your environment |
+| "No entry point configured" | Run `deprecator init` to set up your package |
+| "Import error" | Check that your deprecator module is correctly structured |
+
+## Environment Variables
+
+You can control deprecation warnings using standard Python environment variables:
+
+```bash
+# Show all warnings
+PYTHONWARNINGS=always deprecator show-registry
+
+# Treat warnings as errors
+PYTHONWARNINGS=error::DeprecationWarning deprecator show-registry
+```
 
 ## For Framework Authors
 
-If you're creating a framework that needs a registry, see the [Registry Management](registry.md) documentation.
+If you're creating a framework that needs a registry, see the [Registry Management](registry.md) documentation for details on creating and managing framework-specific registries.

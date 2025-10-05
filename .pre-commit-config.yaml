@@ -20,5 +20,5 @@ repos:
     rev: v1.17.1
     hooks:
       - id: mypy
-        additional_dependencies: [typing-extensions, pytest>=8.3.0]
+        additional_dependencies: [typing-extensions>=4.0, pytest>=8.3.0, types-click>=7.1, click>=8.0, rich>=10.0]
         args: [--ignore-missing-imports]
