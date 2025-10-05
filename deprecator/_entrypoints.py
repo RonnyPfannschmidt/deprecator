@@ -111,7 +111,7 @@ def validate_deprecator(ep: importlib.metadata.EntryPoint) -> list[str]:
         )
 
     for deprecation in deprecator:
-        importable_name = deprecation.find_importable_name()
+        importable_name = deprecation.importable_name
         if importable_name is None:
             errors.append(f"Missing importable name for {deprecation}")
         else:

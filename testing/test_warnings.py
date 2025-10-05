@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from conftest import TestVersions, assert_warnings
+import sys
+from types import ModuleType
+
+import pytest
+from conftest import TestVersions, assert_warnings, get_test_deprecator
 from packaging.version import Version
 
 from deprecator._deprecator import Deprecator
@@ -158,3 +162,139 @@ def test_warning_with_replacement_message() -> None:
     message = str(caught_warning.message)
     assert "old function is deprecated" in message
     assert "a replacement might be: new_function()" in message
+
+
+# Tests for warning __repr__ from test_improvements.py
+def test_warning_instance_repr() -> None:
+    """Test that warning instances have useful __repr__ showing version info."""
+    deprecator = get_test_deprecator(":test_package", TestVersions.CURRENT)
+    warning = deprecator.define(
+        "Test deprecation",
+        gone_in=TestVersions.FUTURE,
+        warn_in=TestVersions.PAST,
+    )
+    repr_str = repr(warning)
+
+    # Should show version information
+    assert "gone_in" in repr_str or str(TestVersions.FUTURE) in repr_str
+    assert "warn_in" in repr_str or str(TestVersions.PAST) in repr_str
+
+
+def test_warning_class_repr() -> None:
+    """Test that warning classes show their categorization info."""
+    deprecator = get_test_deprecator(":test_package", TestVersions.CURRENT)
+    warning = deprecator.define(
+        "Test deprecation",
+        gone_in=TestVersions.FUTURE,
+        warn_in=TestVersions.PAST,
+    )
+    class_repr = repr(type(warning))
+
+    # Class repr should indicate it's a deprecation warning type
+    assert "DeprecationWarning" in class_repr
+
+
+# Performance and caching tests from test_improvements.py
+def test_find_warning_in_modules_function() -> None:
+    """Test the standalone find_warning_in_modules function."""
+    from deprecator._warnings import find_warning_in_modules
+
+    deprecator = get_test_deprecator(":test_package", TestVersions.CURRENT)
+    warning = deprecator.define(
+        "Test deprecation",
+        gone_in=TestVersions.FUTURE,
+        warn_in=TestVersions.PAST,
+    )
+
+    # Create a mock module dict
+    mock_module = ModuleType("test_module")
+    mock_module.test_warning = warning  # type: ignore[attr-defined]
+    test_modules: dict[str, ModuleType | None] = {"test_module": mock_module}
+
+    # Test with custom modules dict
+    name = find_warning_in_modules(warning, test_modules)
+    assert name == "test_module.test_warning"
+
+    # Test with empty modules dict
+    assert find_warning_in_modules(warning, {}) is None
+
+    # Test with None modules (uses sys.modules)
+    sys.modules[__name__].__dict__["test_warning_in_sys"] = warning
+    name = find_warning_in_modules(warning)
+    assert name is not None
+    assert "test_warning_in_sys" in name
+
+
+# These tests have been replaced by test_importable_name_cached_property
+# which tests the new cached property implementation
+
+
+def test_importable_name_cached_property() -> None:
+    """Test the importable_name cached property."""
+    deprecator = get_test_deprecator(":test_package", TestVersions.CURRENT)
+    warning = deprecator.define(
+        "Test deprecation",
+        gone_in=TestVersions.FUTURE,
+        warn_in=TestVersions.PAST,
+    )
+
+    # Add to module for finding
+    sys.modules[__name__].__dict__["test_cached_prop"] = warning
+
+    # First access should find and cache
+    name1 = warning.importable_name
+    assert name1 is not None
+    assert "test_cached_prop" in name1
+
+    # Remove from module
+    del sys.modules[__name__].__dict__["test_cached_prop"]
+
+    # Second access should return cached value
+    name2 = warning.importable_name
+    assert name2 == name1
+
+    # Verify it's a cached_property instance
+    from functools import cached_property
+
+    assert isinstance(type(warning).importable_name, cached_property)
+
+
+# Edge case test for warn_explicit
+def test_warning_warn_explicit_with_edge_cases() -> None:
+    """Test the warn_explicit method with various inputs."""
+    deprecator = get_test_deprecator(":test_package", TestVersions.CURRENT)
+    warning = deprecator.define(
+        "Test deprecation",
+        gone_in=TestVersions.FUTURE,
+        warn_in=TestVersions.PAST,
+    )
+
+    # Should handle warn_explicit without errors
+    with pytest.warns(DeprecationWarning):
+        warning.warn_explicit(filename="test_file.py", lineno=42, module="test_module")
+
+    # Should handle None module
+    with pytest.warns(DeprecationWarning):
+        warning.warn_explicit(filename="test_file.py", lineno=42, module=None)
+
+
+# ClassVar initialization test from test_improvements.py
+def test_class_var_initialization() -> None:
+    """Test that ClassVars are properly initialized on warning classes."""
+    deprecator = get_test_deprecator(":test_package", TestVersions.CURRENT)
+    warning = deprecator.define(
+        "Test deprecation",
+        gone_in=TestVersions.FUTURE,
+        warn_in=TestVersions.PAST,
+    )
+
+    # Check ClassVars are set
+    assert hasattr(type(warning), "gone_in")
+    assert hasattr(type(warning), "warn_in")
+    assert hasattr(type(warning), "current_version")
+    assert hasattr(type(warning), "package_name")
+
+    # Check values
+    assert type(warning).gone_in == TestVersions.FUTURE
+    assert type(warning).warn_in == TestVersions.PAST
+    assert type(warning).current_version == TestVersions.CURRENT

@@ -189,3 +189,19 @@ def test_colon_prefixed_package_requires_version() -> None:
         ValueError, match="Test package ':test-package' requires an explicit version"
     ):
         registry.for_package(":test-package")
+
+
+def test_registry_parameter_consistency() -> None:
+    """Test that registry and deprecator use consistent parameter names."""
+    from deprecator._deprecator import Deprecator
+    from deprecator._registry import DeprecatorRegistry
+
+    registry = DeprecatorRegistry(framework=PackageName(":test_framework"))
+
+    # Both should accept _version parameter consistently
+    deprecator1 = registry.for_package(":test1", _version=Version("1.0.0"))
+    assert deprecator1.current_version == Version("1.0.0")
+
+    # Deprecator.for_package should also use _version
+    deprecator2 = Deprecator.for_package(":test2", _version=Version("2.0.0"))
+    assert deprecator2.current_version == Version("2.0.0")

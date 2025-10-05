@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import sys
 import warnings
+from functools import cached_property
+from types import ModuleType
 from typing import TYPE_CHECKING, ClassVar, Type, TypeVar, Union
 
 from packaging.version import Version
@@ -17,6 +19,7 @@ __all__ = [
     "WarningClass",
     "WarningInstance",
     "create_package_warning_classes",
+    "find_warning_in_modules",
     "get_warning_types",
 ]
 
@@ -43,6 +46,34 @@ WarningClass = Union[
 WARNING_TYPES: TypeAlias = "tuple[type[DeprecatorWarningMixing], ...]"
 
 
+def find_warning_in_modules(
+    warning_instance: object,
+    modules: dict[str, ModuleType | None] | None = None,
+) -> str | None:
+    """Search for a warning instance in modules and return its importable name.
+
+    Args:
+        warning_instance: The warning instance to search for
+        modules: Dictionary of modules to search in (defaults to sys.modules)
+
+    Returns:
+        The importable name (e.g., "module.attribute") or None if not found
+    """
+    if modules is None:
+        modules = sys.modules  # type: ignore[assignment]
+
+    for module in modules.values():  # type: ignore[union-attr]
+        if module is None:
+            continue
+        module_dict = getattr(module, "__dict__", None)
+        if module_dict is None:
+            continue
+        for attr, value in module_dict.items():
+            if value is warning_instance:
+                return f"{module.__name__}.{attr}"
+    return None
+
+
 class DeprecatorWarningMixing(Warning):
     package_name: ClassVar[str]
     github_warning_kind: ClassVar[str]
@@ -51,17 +82,24 @@ class DeprecatorWarningMixing(Warning):
     current_version: ClassVar[Version]
     deprecator: ClassVar[Deprecator]
 
-    _cached_importable_name: str | None = None
+    def __repr__(self) -> str:
+        """Return a string representation showing version information."""
+        # Get version info if available
+        gone_in = getattr(type(self), "gone_in", None)
+        warn_in = getattr(type(self), "warn_in", None)
 
-    def find_importable_name(self) -> str | None:
-        if self._cached_importable_name is not None:
-            return self._cached_importable_name
-        for module in sys.modules.values():
-            for attr, value in module.__dict__.items():
-                if value is self:
-                    self._cached_importable_name = f"{module.__name__}.{attr}"
-                    return self._cached_importable_name
-        return None
+        if gone_in is not None and warn_in is not None:
+            return f"<{type(self).__name__} gone_in={gone_in} warn_in={warn_in}>"
+        return super().__repr__()
+
+    @cached_property
+    def importable_name(self) -> str | None:
+        """Get the importable name for this warning instance (cached).
+
+        Returns:
+            The importable name (e.g., "module.attribute") or None if not found
+        """
+        return find_warning_in_modules(self)
 
     def warn(self, *, stacklevel: int = 2) -> None:
         """Emit this warning using the standard warnings system.

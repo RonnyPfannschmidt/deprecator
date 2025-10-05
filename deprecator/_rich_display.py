@@ -41,7 +41,7 @@ def filtered_deprecations(
         DeprecationInfo(
             warning_type=_get_warning_type_display_name(warning),
             message=str(warning),
-            importable_name=warning.find_importable_name(),
+            importable_name=warning.importable_name,
             warn_in=warning.warn_in,
             gone_in=warning.gone_in,
         )

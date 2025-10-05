@@ -16,12 +16,12 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def for_package(
-    package_name: PackageName | str, _package_version: Version | None = None
+    package_name: PackageName | str, _version: Version | None = None
 ) -> Deprecator:
     """return a deprecator bound to a specific package name and its current version"""
     from ._registry import default_registry
 
-    return default_registry.for_package(package_name, _version=_package_version)
+    return default_registry.for_package(package_name, _version=_version)
 
 
 def registry_for(*, framework: PackageName | str) -> DeprecatorRegistry:
