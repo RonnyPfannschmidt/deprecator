@@ -24,7 +24,7 @@ __all__ = [
 ]
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
+    from typing_extensions import TypeAlias
 
     from ._deprecator import Deprecator
 
@@ -145,7 +145,7 @@ class DeprecatorWarningMixing(Warning):
         )
 
     def apply(self, func_or_class: T) -> T:
-        decorator = deprecated(str(self), category=type(self))
+        decorator = deprecated(str(self), category=type(self))  # pyright: ignore[reportArgumentType]
         return decorator(func_or_class)
 
 

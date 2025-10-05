@@ -29,7 +29,7 @@ class DeprecatorPlugin:
 
     show_github_annotations: bool
     expired_warnings_count: int = field(default_factory=int, init=False)
-    github_annotations: list[GithubAnnotation] = field(default_factory=list, init=False)
+    github_annotations: list[GithubAnnotation] = field(default_factory=list, init=False)  # pyright: ignore[reportUnknownVariableType]
 
     def pytest_warning_recorded(
         self,

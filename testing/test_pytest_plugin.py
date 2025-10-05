@@ -165,12 +165,10 @@ def test_github_annotations_auto_enabled_in_github_actions(
     result = pytester.runpytest_subprocess("-v", "--deprecator-github-annotations")
 
     # Check that GitHub annotations are in the output
-    result.stdout.fnmatch_lines(
-        [
-            "::warning file=*/test_github_annotations_auto_enabled_in_github_actions.py"
-            ",line=11,title=deprecation::This is pending"
-        ]
-    )
+    result.stdout.fnmatch_lines([
+        "::warning file=*/test_github_annotations_auto_enabled_in_github_actions.py"
+        ",line=11,title=deprecation::This is pending"
+    ])
 
 
 def test_no_github_annotations_without_flag_or_ci(pytester: pytest.Pytester) -> None:

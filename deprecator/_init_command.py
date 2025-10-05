@@ -66,12 +66,12 @@ def get_package_info(pyproject_data: dict[str, Any]) -> tuple[str, str] | None:
     # First check tool.setuptools.packages
     tool: dict[str, Any] = pyproject_data.get("tool", {})
     setuptools: dict[str, Any] = tool.get("setuptools", {})
-    packages: list[str] | None | object = setuptools.get("packages")
-
+    packages: list[str] | object | None = setuptools.get("packages")
+    import_name: str
     if packages and isinstance(packages, list) and packages:
         # Use the first package as the import name
+        assert isinstance(packages[0], str)
         import_name = packages[0]
-        assert isinstance(import_name, str)
     else:
         # Fall back to package name, replacing hyphens with underscores
         import_name = package_name.replace("-", "_")

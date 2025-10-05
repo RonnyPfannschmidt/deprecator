@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import inspect
 import sys
+from typing import Any
 
 from rich.console import Console
 from rich.text import Text
@@ -57,7 +58,7 @@ def print_all_deprecators(
         registry: Optional registry to use (defaults to default_registry)
     """
     registry = registry or default_registry
-    for deprecator in registry._deprecators.values():
+    for deprecator in registry:
         print_deprecations(deprecator, console=console)
         print()  # Add blank line between tables
 
@@ -121,7 +122,7 @@ def validate_package(package_name: str, console: Console) -> None:
             console.print(GREEN_CHECK_MARK, f"deprecator:{name}")
             valid_count += 1
         else:
-            console.print(RED_CROSS, "deprecator:{name}: {'; '.join(errors)}")
+            console.print(RED_CROSS, f"deprecator:{name}: {'; '.join(errors)}")
             invalid_count += 1
 
     # Check registry entrypoints
@@ -283,7 +284,11 @@ def main(
     handler_func = parsed_args.func
 
     # Build kwargs with all available parameters
-    all_kwargs = {**vars(parsed_args), "console": console, "registry": registry}
+    all_kwargs: dict[str, Any] = {
+        **vars(parsed_args),
+        "console": console,
+        "registry": registry,
+    }
     # Remove argparse-specific fields that aren't function parameters
     all_kwargs.pop("func", None)
     all_kwargs.pop("command", None)
