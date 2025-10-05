@@ -7,7 +7,9 @@ from package_setup import PROCESS_DATA_DEPRECATION
 
 def test_process_data_deprecated() -> None:
     """Test that process_data emits deprecation warning."""
-    with pytest.warns(type(PROCESS_DATA_DEPRECATION)):
+    with pytest.warns(
+        type(PROCESS_DATA_DEPRECATION), match=str(PROCESS_DATA_DEPRECATION)
+    ):
         result = process_data("hello")
     assert result == "HELLO"
 
