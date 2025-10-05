@@ -9,12 +9,7 @@ from pytest import CaptureFixture
 
 # Removed unused imports
 from deprecator._registry import DeprecatorRegistry
-from deprecator.cli import (
-    cli,
-    print_all_deprecators,
-    print_deprecator,
-    validate_validators,
-)
+from deprecator.cli import cli, print_all_deprecators, print_deprecator
 
 
 class TestPrintDeprecator:
@@ -53,7 +48,7 @@ class TestPrintAllDeprecators:
 
         # Check for both test packages
         assert ":test_package" in output
-        assert ":test_package2" in output
+        assert ":another_package" in output
 
     def test_empty_registry(self, empty_registry: DeprecatorRegistry) -> None:
         """Test printing all deprecators from empty test registry."""
@@ -89,15 +84,16 @@ class TestShowPackageCommand:
 
 
 class TestValidateValidators:
-    """Tests for validate_validators function."""
+    """Tests for validate_validators command."""
 
     def test_validate_validators(self) -> None:
         """Test validating that known validators have entrypoints."""
-        output = run_with_console_capture(validate_validators)
+        runner = click.testing.CliRunner()
+        result = runner.invoke(cli, ["validate-validators"])
 
         # Should pass since the deprecator package has required entrypoints
-        assert "✔" in output
-        assert "All known validators have corresponding entrypoints" in output
+        assert "✔" in result.output
+        assert "All known validators have corresponding entrypoints" in result.output
 
 
 class TestListPackagesCommand:
@@ -132,7 +128,10 @@ class TestCLI:
         result = runner.invoke(cli, ["show-registry", "test_package"])
 
         # The command should run (even if it errors on the package)
-        assert "show-registry" in str(result)
+        # test_package doesn't exist, so we expect an error
+        assert result.exit_code in (1, 2)
+        # Check that error message is present
+        assert "Error:" in result.output or "not found" in result.output
 
     def test_show_registry_without_package(self) -> None:
         """Test show-registry command without package name."""
