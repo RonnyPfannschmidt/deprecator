@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import click.testing
 import pytest
 from conftest import run_with_console_capture
@@ -162,10 +164,10 @@ class TestMainFunction:
         assert result.exit_code == 1
         assert "Package 'nonexistent-package' not found" in result.output
 
-    def test_init_command(self) -> None:
+    def test_init_command(self, tmp_path: Path) -> None:
         """Test init command creates proper structure."""
         runner = click.testing.CliRunner()
-        with runner.isolated_filesystem():
+        with runner.isolated_filesystem(temp_dir=tmp_path):  # type: ignore[call-arg]
             # Create a minimal valid package structure
             import os
 
@@ -198,6 +200,113 @@ mypackage = "mypackage._deprecations:deprecator"
                 assert result.exit_code == 2  # Configuration error
                 # Check for meaningful error message
                 assert "Error:" in result.output or "already exists" in result.output
+
+    def test_init_command_already_setup(self, tmp_path: Path) -> None:
+        """Test init command in a project that's already setup."""
+        runner = click.testing.CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):  # type: ignore[call-arg]
+            import os
+
+            # Create a complete package structure that's already set up
+            os.makedirs("mypackage")
+            with open("mypackage/__init__.py", "w") as f:
+                f.write('"""Test package."""\n')
+
+            # Create existing _deprecations.py file with custom content
+            existing_deprecations_content = '''"""Existing deprecations."""
+
+from __future__ import annotations
+
+from deprecator import for_package
+
+# Custom deprecator setup
+deprecator = for_package(__package__)
+
+# Existing deprecation
+EXISTING_FEATURE = deprecator.define(
+    "This feature already exists and should not be lost",
+    warn_in="1.0.0",
+    gone_in="2.0.0"
+)
+'''
+            with open("mypackage/_deprecations.py", "w") as f:
+                f.write(existing_deprecations_content)
+
+            # Create pyproject.toml with entrypoint already configured
+            with open("pyproject.toml", "w") as f:
+                f.write("""[project]
+name = "mypackage"
+version = "0.1.0"
+
+[project.entry-points."deprecator.deprecator"]
+mypackage = "mypackage._deprecations:deprecator"
+""")
+
+            # Run init command - should handle existing setup gracefully
+            result = runner.invoke(cli, ["init"], input="n\n")  # Don't overwrite
+
+            # Should succeed and recognize existing setup
+            assert result.exit_code == 0
+            assert "already exists" in result.output
+
+            # Verify existing file wasn't overwritten (since we said no)
+            with open("mypackage/_deprecations.py") as f:
+                content = f.read()
+                assert "EXISTING_FEATURE" in content
+                assert "This feature already exists" in content
+
+            # Verify entrypoint is still there
+            with open("pyproject.toml") as f:
+                content = f.read()
+                assert "deprecator.deprecator" in content
+                assert 'mypackage = "mypackage._deprecations:deprecator"' in content
+
+    def test_init_command_already_setup_overwrite(self, tmp_path: Path) -> None:
+        """Test init command overwrites when user confirms."""
+        runner = click.testing.CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):  # type: ignore[call-arg]
+            import os
+
+            # Create a complete package structure that's already set up
+            os.makedirs("mypackage")
+            with open("mypackage/__init__.py", "w") as f:
+                f.write('"""Test package."""\n')
+
+            # Create existing _deprecations.py file with custom content
+            existing_content = '''"""Old content that will be replaced."""
+# This should be overwritten
+OLD_DEPRECATION = None
+'''
+            with open("mypackage/_deprecations.py", "w") as f:
+                f.write(existing_content)
+
+            # Create pyproject.toml without entrypoint (to test it gets added)
+            with open("pyproject.toml", "w") as f:
+                f.write("""[project]
+name = "mypackage"
+version = "0.1.0"
+""")
+
+            # Run init command and confirm overwrite
+            result = runner.invoke(cli, ["init"], input="y\n")  # Yes, overwrite
+
+            # Should succeed
+            assert result.exit_code == 0
+            assert "already exists" in result.output
+
+            # Verify file was overwritten with new content
+            with open("mypackage/_deprecations.py") as f:
+                content = f.read()
+                assert "OLD_DEPRECATION" not in content  # Old content gone
+                assert "Old content" not in content
+                assert "EXAMPLE_DEPRECATION" in content  # New template content
+                assert "for_package" in content
+
+            # Verify entrypoint was added
+            with open("pyproject.toml") as f:
+                content = f.read()
+                assert "deprecator.deprecator" in content
+                assert 'mypackage = "mypackage._deprecations:deprecator"' in content
 
     def test_show_registry_with_valid_package(self) -> None:
         """Test show-registry with a package that exists and has deprecations."""
