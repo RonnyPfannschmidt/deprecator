@@ -72,15 +72,17 @@ def create_deprecations_table(
 
     deprecations = filtered_deprecations(deprecator, warning_types)
 
-    # Create the table
-    table = Table(title=title, show_header=True, header_style="bold magenta")
+    # Create the table with expand=True to use full console width
+    table = Table(
+        title=title, show_header=True, header_style="bold magenta", expand=True
+    )
 
-    # Add columns
+    # Add columns - use overflow="fold" to wrap text instead of truncating
     table.add_column("Type", style="cyan", no_wrap=True)
-    table.add_column("Message", style="white", max_width=60)
-    table.add_column("Warn In", style="yellow", justify="center")
-    table.add_column("Gone In", style="red", justify="center")
-    table.add_column("Importable Name", style="green", no_wrap=True)
+    table.add_column("Message", style="white", overflow="fold")
+    table.add_column("Warn In", style="yellow", justify="center", no_wrap=True)
+    table.add_column("Gone In", style="red", justify="center", no_wrap=True)
+    table.add_column("Importable Name", style="green", overflow="fold")
 
     # Add rows to the table
     for dep_info in deprecations:
