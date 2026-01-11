@@ -7,14 +7,14 @@ The deprecator package provides a comprehensive API for managing deprecation war
 ### [Deprecator](core.md)
 The main class for managing deprecations within a package. Handles version-aware warning categorization and deprecation lifecycle management.
 
-### [Registry Management](registry.md)
-Registry system for grouping related deprecations from multiple packages that contribute to a common framework or ecosystem.
-
 ### [Warning Categories](warnings.md)
 Version-aware warning types that automatically categorize deprecations based on the current package version.
 
 ### [CLI Tool](cli.md)
-Command-line interface for managing and monitoring deprecations across your project.
+Command-line interface for initializing, validating, and inspecting deprecations across your project.
+
+!!! note "For Framework Developers"
+    If you're building a framework with plugins/extensions, see [Registry Management](registry.md) for managing deprecations across an ecosystem.
 
 ## Quick Reference
 
@@ -51,7 +51,7 @@ def complex_function():
     if condition:
         OLD_API_DEPRECATION.warn()
 
-# With explicit location
+# With explicit location (for tools/linters)
 OLD_API_DEPRECATION.warn_explicit("file.py", 42)
 ```
 
@@ -62,27 +62,34 @@ OLD_API_DEPRECATION.warn_explicit("file.py", 42)
 Get or create a deprecator instance for a specific package.
 
 **Parameters:**
+
 - `package_name`: The package name (string or PackageName object)
 - `version`: Optional specific version (defaults to installed package version)
 
 **Returns:**
+
 - A Deprecator instance bound to the package
 
-### `registry_for(*, framework: str | PackageName) -> DeprecatorRegistry`
+**Example:**
 
-Get or create a registry for a framework to group deprecations from its contributing packages.
+```python
+from deprecator import for_package
 
-**Parameters:**
-- `framework`: The framework name (keyword-only, e.g., "django", "flask")
+# Uses installed version automatically
+deprecator = for_package("mypackage")
 
-**Returns:**
-- A DeprecatorRegistry instance for that framework
+# Or specify a version explicitly
+from packaging.version import Version
+deprecator = for_package("mypackage", Version("2.0.0"))
+```
 
 ### `deprecate(message: str, category: Optional[Type[Warning]] = None, stacklevel: int = 2)`
 
-Legacy decorator function for simple deprecation warnings.
+!!! warning "Legacy API"
+    This is the legacy decorator for simple deprecation warnings. For new code, prefer `for_package()` with `define()` for version-aware deprecations.
 
 **Parameters:**
+
 - `message`: The deprecation message
 - `category`: Warning category (defaults to DeprecationWarning)
 - `stacklevel`: Stack level for warning location
@@ -92,6 +99,7 @@ Legacy decorator function for simple deprecation warnings.
 Each deprecation warning instance provides:
 
 ### `apply`
+
 Decorator that automatically emits warnings when the decorated function/class is used.
 
 ```python
@@ -101,6 +109,7 @@ def old_function():
 ```
 
 ### `warn(stacklevel: int = 2)`
+
 Emit warning using the standard warnings system.
 
 ```python
@@ -109,6 +118,7 @@ def function():
 ```
 
 ### `warn_explicit(filename: str, lineno: int, module: Optional[str] = None)`
+
 Emit warning with explicit file location.
 
 ```python
@@ -135,9 +145,6 @@ The package uses entry points for plugin discovery:
 ```toml
 [project.entry-points."deprecator.deprecator"]
 mypackage = "mypackage._deprecations:deprecator"
-
-[project.entry-points."deprecator.registry"]
-myframework = "myframework._registry:registry"
 ```
 
 ## Environment Variables
@@ -150,6 +157,5 @@ Control deprecation behavior:
 ## Next Steps
 
 - Explore the [Core Deprecator API](core.md)
-- Learn about [Registry Management](registry.md)
 - Understand [Warning Categories](warnings.md)
 - Use the [CLI Tool](cli.md)

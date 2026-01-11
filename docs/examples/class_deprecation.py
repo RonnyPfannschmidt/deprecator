@@ -1,19 +1,21 @@
-"""Example of deprecating a class."""
+"""Example of deprecating a class.
+
+Use @deprecation.apply on classes to warn when they are instantiated.
+"""
 
 from package_setup import OLD_FEATURE_DEPRECATION
 
-# Assuming we have a deprecation for legacy classes
-LEGACY_CLASS_DEPRECATION = OLD_FEATURE_DEPRECATION  # Using same deprecation for example
 
-
-@LEGACY_CLASS_DEPRECATION.apply
+@OLD_FEATURE_DEPRECATION.apply
 class LegacyProcessor:
-    """This class is deprecated."""
+    """This class is deprecated - use ModernProcessor instead."""
 
-    pass
+    def process(self, data: str) -> str:
+        return data.lower()
 
 
 class ModernProcessor:
-    """The replacement for LegacyProcessor."""
+    """The modern replacement for LegacyProcessor."""
 
-    pass
+    def process(self, data: str) -> str:
+        return data.lower()

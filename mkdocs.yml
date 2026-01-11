@@ -50,9 +50,10 @@ nav:
   - API Reference:
     - Overview: api/index.md
     - Core Deprecator: api/core.md
-    - Registry Management: api/registry.md
     - Warning Categories: api/warnings.md
     - CLI Tool: api/cli.md
+  - Framework Developers:
+    - Registry Management: api/registry.md
   - Development:
     - Contributing: contributing.md
     - Changelog: changelog.md
