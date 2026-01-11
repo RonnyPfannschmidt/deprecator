@@ -125,7 +125,8 @@ def run_with_console_capture(
             warning_types=types
         )
     """
-    console = Console(width=120)
+    # Use a wide console with force_terminal to prevent text truncation in tests
+    console = Console(width=200, force_terminal=True)
 
     with console.capture() as capture:
         kwargs["console"] = console

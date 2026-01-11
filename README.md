@@ -6,6 +6,10 @@ A framework for managing deprecation warnings with version-aware categorization.
 
 The deprecator package provides a structured approach to handling deprecation warnings in Python packages, automatically categorizing warnings based on version comparisons and providing flexible management of deprecation policies across different packages and frameworks.
 
+## Requirements
+
+- Python 3.10 or higher
+
 ## Quick Start
 
 1. Install deprecator with CLI support:

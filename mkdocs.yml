@@ -1,0 +1,110 @@
+site_name: Deprecator
+site_description: A framework for managing deprecation warnings with version-aware categorization
+site_author: Ronny Pfannschmidt, Anthony Long
+site_url: https://ronnypfannschmidt.github.io/deprecator/
+repo_name: RonnyPfannschmidt/deprecator
+repo_url: https://github.com/RonnyPfannschmidt/deprecator
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2024 Ronny Pfannschmidt, Anthony Long
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - User Guide:
+    - Cookbook: cookbook.md
+    - Migration Guide: guides/migration.md
+    - Testing Deprecations: guides/testing.md
+    - CI/CD Integration: guides/ci-integration.md
+  - API Reference:
+    - Overview: api/index.md
+    - Core Deprecator: api/core.md
+    - Warning Categories: api/warnings.md
+    - CLI Tool: api/cli.md
+  - Framework Developers:
+    - Registry Management: api/registry.md
+  - Development:
+    - Contributing: contributing.md
+    - Changelog: changelog.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [deprecator]
+          options:
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            docstring_style: google
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+
+markdown_extensions:
+  - mkdocs-click
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: docs
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+  - def_list
+  - footnotes
+
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/RonnyPfannschmidt/deprecator
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/deprecator/
+
+watch:
+  - deprecator
