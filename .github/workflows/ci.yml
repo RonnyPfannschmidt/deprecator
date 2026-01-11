@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main]
+    tags: ['v*']
   pull_request:
-    branches: [ main, master ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -31,14 +32,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version:  ${{ fromJson(needs.build-and-inspect.outputs.python-versions) }}
+        python-version: ${{ fromJson(needs.build-and-inspect.outputs.python-versions) }}
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Install uv
-      uses: astral-sh/setup-uv@v4
+      uses: astral-sh/setup-uv@v5
       with:
-        version: "latest"
         python-version: ${{ matrix.python-version }}
         enable-cache: true
 
@@ -47,8 +48,6 @@ jobs:
       with:
         name: Packages
         path: dist
-
-
 
     - name: Run tests against installed package
       run: |
@@ -61,53 +60,29 @@ jobs:
           --cov-report=term
 
     - name: Upload coverage to Codecov
-      if: matrix.python-version == '3.11'
+      if: matrix.python-version == '3.12'
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
 
-  # Uncomment when ready to upload to PyPI
-  # upload-to-test-pypi:
-  #   name: Upload to Test PyPI
-  #   runs-on: ubuntu-latest
-  #   needs: [build-and-inspect, test]
-  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  #   environment:
-  #     name: test-pypi
-  #     url: https://test.pypi.org/project/${{ needs.build-and-inspect.outputs.package-name }}/
-  #   permissions:
-  #     id-token: write  # IMPORTANT: mandatory for trusted publishing
-  #
-  #   steps:
-  #   - name: Download built packages
-  #     uses: actions/download-artifact@v4
-  #     with:
-  #       name: ${{ needs.build-and-inspect.outputs.artifact-name }}
-  #       path: dist
-  #
-  #   - name: Upload to Test PyPI
-  #     uses: pypa/gh-action-pypi-publish@release/v1
-  #     with:
-  #       repository-url: https://test.pypi.org/legacy/
+  upload-to-pypi:
+    name: Upload to PyPI
+    runs-on: ubuntu-latest
+    needs: [build-and-inspect, test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: pypi
+      url: https://pypi.org/project/deprecator/${{ needs.build-and-inspect.outputs.package-version }}/
+    permissions:
+      id-token: write
 
-  # upload-to-pypi:
-  #   name: Upload to PyPI
-  #   runs-on: ubuntu-latest
-  #   needs: [build-and-inspect, test]
-  #   if: github.event_name == 'release' && github.event.action == 'published'
-  #   environment:
-  #     name: pypi
-  #     url: https://pypi.org/project/${{ needs.build-and-inspect.outputs.package-name }}/${{ needs.build-and-inspect.outputs.package-version }}/
-  #   permissions:
-  #     id-token: write  # IMPORTANT: mandatory for trusted publishing
-  #
-  #   steps:
-  #   - name: Download built packages
-  #     uses: actions/download-artifact@v4
-  #     with:
-  #       name: ${{ needs.build-and-inspect.outputs.artifact-name }}
-  #       path: dist
-  #
-  #   - name: Upload to PyPI
-  #     uses: pypa/gh-action-pypi-publish@release/v1
+    steps:
+    - name: Download built packages
+      uses: actions/download-artifact@v4
+      with:
+        name: Packages
+        path: dist
+
+    - name: Upload to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
