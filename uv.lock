@@ -247,15 +247,19 @@ cli = [
     { name = "rich" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
-test = [
-    { name = "pytest" },
-]
 
 [package.dev-dependencies]
 dev = [
     { name = "build" },
+    { name = "deprecator", extra = ["cli"] },
+    { name = "mkdocs" },
+    { name = "mkdocs-click" },
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings", extra = ["python"] },
     { name = "mypy" },
     { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
     { name = "ruff" },
 ]
 docs = [
@@ -264,26 +268,28 @@ docs = [
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
 ]
-test = [
-    { name = "pytest" },
-    { name = "pytest-cov" },
-]
 
 [package.metadata]
 requires-dist = [
     { name = "click", marker = "extra == 'cli'", specifier = ">=8.0" },
     { name = "packaging", specifier = ">=20.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=7" },
     { name = "rich", marker = "extra == 'cli'", specifier = ">=10.0" },
     { name = "tomli", marker = "python_full_version < '3.11' and extra == 'cli'", specifier = ">=1.0" },
 ]
-provides-extras = ["cli", "test"]
+provides-extras = ["cli"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "build", specifier = ">=0.10" },
+    { name = "deprecator", extras = ["cli"] },
+    { name = "mkdocs", specifier = ">=1.5" },
+    { name = "mkdocs-click", specifier = ">=0.8" },
+    { name = "mkdocs-material", specifier = ">=9.0" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.24" },
     { name = "mypy", specifier = ">=1" },
     { name = "pre-commit", specifier = ">=3" },
+    { name = "pytest", specifier = ">=7" },
+    { name = "pytest-cov", specifier = ">=4" },
     { name = "ruff", specifier = ">=0.1" },
 ]
 docs = [
@@ -291,10 +297,6 @@ docs = [
     { name = "mkdocs-click", specifier = ">=0.8" },
     { name = "mkdocs-material", specifier = ">=9.0" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.24" },
-]
-test = [
-    { name = "pytest", specifier = ">=7" },
-    { name = "pytest-cov", specifier = ">=4" },
 ]
 
 [[package]]

@@ -32,16 +32,15 @@ classifiers = [
 ]
 
 dynamic = [ "version" ]
-urls.Homepage = "http://github.com/antlong/deprecator"
+urls.Homepage = "https://github.com/RonnyPfannschmidt/deprecator"
+urls.Repository = "https://github.com/RonnyPfannschmidt/deprecator"
+urls.Documentation = "https://ronnypfannschmidt.github.io/deprecator/"
 
 [project.optional-dependencies]
 cli = [
   "click>=8.0",
   "rich>=10.0",
   'tomli>=1.0; python_version < "3.11"',
-]
-test = [
-  "pytest>=7",
 ]
 
 [project.entry-points.pytest11]
@@ -58,14 +57,14 @@ deprecator = "deprecator.cli:main"
 
 [dependency-groups]
 dev = [
+  { include-group = "docs" },
+  "deprecator[cli]",
   "build>=0.10",
   "mypy>=1",
   "pre-commit>=3",
-  "ruff>=0.1",
-]
-test = [
   "pytest>=7",
   "pytest-cov>=4",
+  "ruff>=0.1",
 ]
 docs = [
   "mkdocs>=1.5",
@@ -132,4 +131,4 @@ warn_unreachable = true
 strict_equality = true
 
 [tool.uv]
-default-groups = [ "dev", "test", "docs" ]
+default-groups = [ "dev" ]
