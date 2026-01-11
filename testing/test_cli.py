@@ -167,7 +167,7 @@ class TestMainFunction:
     def test_init_command(self, tmp_path: Path) -> None:
         """Test init command creates proper structure."""
         runner = click.testing.CliRunner()
-        with runner.isolated_filesystem(temp_dir=tmp_path):  # type: ignore[call-arg]
+        with runner.isolated_filesystem(temp_dir=tmp_path):
             # Create a minimal valid package structure
             import os
 
@@ -204,7 +204,7 @@ mypackage = "mypackage._deprecations:deprecator"
     def test_init_command_already_setup(self, tmp_path: Path) -> None:
         """Test init command in a project that's already setup."""
         runner = click.testing.CliRunner()
-        with runner.isolated_filesystem(temp_dir=tmp_path):  # type: ignore[call-arg]
+        with runner.isolated_filesystem(temp_dir=tmp_path):
             import os
 
             # Create a complete package structure that's already set up
@@ -264,7 +264,7 @@ mypackage = "mypackage._deprecations:deprecator"
     def test_init_command_already_setup_overwrite(self, tmp_path: Path) -> None:
         """Test init command overwrites when user confirms."""
         runner = click.testing.CliRunner()
-        with runner.isolated_filesystem(temp_dir=tmp_path):  # type: ignore[call-arg]
+        with runner.isolated_filesystem(temp_dir=tmp_path):
             import os
 
             # Create a complete package structure that's already set up

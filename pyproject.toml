@@ -62,8 +62,6 @@ dev = [
   "mypy>=1",
   "pre-commit>=3",
   "ruff>=0.1",
-  "twine>=4",
-  "types-click>=7.1",
 ]
 test = [
   "pytest>=7",
