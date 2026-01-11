@@ -1,7 +1,7 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 
-requires = [ "setuptools>=75", "setuptools-scm>=9" ]
+requires = [ "setuptools>=75", "setuptools-scm[simple]>=9" ]
 
 [project]
 name = "deprecator"
@@ -17,7 +17,7 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-  "packaging>=20.0",
+  "packaging>=21.0",
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -39,7 +39,7 @@ urls.Documentation = "https://ronnypfannschmidt.github.io/deprecator/"
 [project.optional-dependencies]
 cli = [
   "click>=8.0",
-  "rich>=10.0",
+  "rich>=13.0",
   'tomli>=1.0; python_version < "3.11"',
 ]
 
@@ -59,17 +59,17 @@ deprecator = "deprecator.cli:main"
 dev = [
   { include-group = "docs" },
   "deprecator[cli]",
-  "build>=0.10",
+  "build>=1.0",
   "mypy>=1",
   "pre-commit>=3",
-  "pytest>=7",
-  "pytest-cov>=4",
-  "ruff>=0.1",
+  "pytest>=9.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.9",
 ]
 docs = [
   "mkdocs>=1.5",
   "mkdocs-material>=9.0",
-  "mkdocstrings[python]>=0.24",
+  "mkdocstrings[python]>=0.26",
   "mkdocs-click>=0.8",
 ]
 
@@ -98,7 +98,7 @@ lint.extend-select = [
 lint.future-annotations = true
 
 [tool.pytest.ini_options]
-minversion = "7.0"
+minversion = "9.0"
 addopts = "-ra --strict-markers --strict-config --cov-report=term-missing -p pytester"
 testpaths = ["testing"]
 
