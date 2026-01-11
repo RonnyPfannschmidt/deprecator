@@ -4,7 +4,7 @@ site_author: Ronny Pfannschmidt, Anthony Long
 site_url: https://ronnypfannschmidt.github.io/deprecator/
 repo_name: RonnyPfannschmidt/deprecator
 repo_url: https://github.com/RonnyPfannschmidt/deprecator
-edit_uri: edit/master/docs/
+edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2024 Ronny Pfannschmidt, Anthony Long
 
 theme:
