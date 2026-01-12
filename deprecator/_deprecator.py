@@ -78,9 +78,11 @@ class Deprecator:
             return self.DeprecationWarning
         return self.PendingDeprecationWarning
 
-    def _parse_version(self, version: Version | str | None) -> Version:
+    def _parse_version(
+        self, version: Version | str | None, *, fallback: Version
+    ) -> Version:
         if version is None:
-            return self.current_version
+            return fallback
         if isinstance(version, Version):
             return version
         return Version(version)
@@ -94,8 +96,12 @@ class Deprecator:
         *,
         importable_name: str | None = None,
     ) -> WarningInstance:
-        gone_in = self._parse_version(gone_in)
-        warn_in = self._parse_version(warn_in)
+        # gone_in defaults to current_version
+        gone_in = self._parse_version(gone_in, fallback=self.current_version)
+        # warn_in defaults to min(gone_in, current_version) to ensure warn_in <= gone_in
+        warn_in = self._parse_version(
+            warn_in, fallback=min(gone_in, self.current_version)
+        )
 
         if replace_with is not None:
             message = f"{message}\n\na replacement might be: {replace_with}"
