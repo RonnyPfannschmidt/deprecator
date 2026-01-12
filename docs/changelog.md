@@ -7,18 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- MkDocs-based documentation with Material theme and GitHub Pages deployment
-- Comprehensive user guide with cookbook, migration, and testing guides
-- "Why deprecator?" section explaining lifecycle management benefits
-- Framework Developer section for registry documentation
+### Fixed
+- `warn_in` now defaults to `min(gone_in, current_version)` when not specified,
+  fixing ValueError when defining deprecations with only `gone_in` and
+  `current_version > gone_in` ([#5](https://github.com/RonnyPfannschmidt/deprecator/pull/5))
 
-### Changed
-- Moved registry documentation to dedicated Framework Developer section
-- Improved example files with clearer comments and self-contained structure
-- Documentation restructured for better end-user navigation
-
-## [0.2.0] - 2025
+## [26.1.0] - 2026-01-12
 
 Major rewrite introducing the modern deprecator API.
 
@@ -34,11 +28,16 @@ Major rewrite introducing the modern deprecator API.
 - **Entry point discovery**: Automatic discovery of deprecators and registries via `deprecator.deprecator` and `deprecator.registry` entry points
 - **Type annotations**: Full mypy support with `py.typed` marker
 - **Rich display**: Optional rich-based terminal output for CLI
+- MkDocs-based documentation with Material theme and GitHub Pages deployment
+- Comprehensive user guide with cookbook, migration, and testing guides
+- "Why deprecator?" section explaining lifecycle management benefits
+- Framework Developer section for registry documentation
 
 ### Changed
 - Minimum Python version raised to 3.10
 - CLI migrated from argparse to Click
 - Deprecated legacy `deprecate()` decorator (still available for compatibility)
+- Documentation restructured for better end-user navigation
 
 ### Architecture
 - `Deprecator` class: Main deprecation management with version-aware warning categorization

@@ -51,6 +51,51 @@ def test_deprecator_define_error(deprecator: Deprecator) -> None:
         )
 
 
+def test_deprecator_define_only_gone_in() -> None:
+    """Test that defining with only gone_in works even when current_version > gone_in.
+
+    When warn_in is not specified, it should default to min(current_version, gone_in).
+    This ensures warn_in <= gone_in always holds.
+    """
+    # Create a deprecator with version higher than the gone_in we'll use
+    deprecator = get_test_deprecator("test-package", "5.0.0")
+
+    # This should NOT raise - warn_in defaults to min(5.0.0, 2.0.0) = 2.0.0
+    warning = deprecator.define("test deprecation", gone_in="2.0.0")
+
+    # Should be an expired warning since current_version (5.0.0) > gone_in (2.0.0)
+    assert isinstance(warning, PerPackageExpiredDeprecationWarning)
+    # warn_in should be gone_in (the minimum)
+    assert warning.warn_in == Version("2.0.0")
+
+
+def test_deprecator_define_only_gone_in_future() -> None:
+    """Test warn_in defaults to current_version when gone_in is in the future."""
+    deprecator = get_test_deprecator("test-package", "1.0.0")
+
+    # gone_in is in the future, so warn_in defaults to current_version
+    warning = deprecator.define("test deprecation", gone_in="3.0.0")
+
+    # Should be a deprecation warning (not pending) since warn_in = current_version
+    assert isinstance(warning, PerPackageDeprecationWarning)
+    # warn_in should be current_version (the minimum)
+    assert warning.warn_in == Version("1.0.0")
+
+
+def test_deprecator_define_only_warn_in() -> None:
+    """Test that defining with only warn_in works.
+
+    When gone_in is not specified, it should default to current_version.
+    """
+    deprecator = get_test_deprecator("test-package", "2.0.0")
+
+    # This should NOT raise - gone_in defaults to current_version
+    warning = deprecator.define("test deprecation", warn_in="1.0.0")
+
+    # Should be an expired warning since current_version == gone_in
+    assert isinstance(warning, PerPackageExpiredDeprecationWarning)
+
+
 @pytest.mark.parametrize(
     ("gone_in", "warn_in", "expected_category"),
     [
@@ -75,19 +120,23 @@ def test_deprecator_category_specification(
 
 
 @pytest.mark.parametrize(
-    ("version", "expected_version"),
+    ("version", "fallback", "expected_version"),
     [
-        (None, TestVersions.CURRENT),
-        (TestVersions.FUTURE, TestVersions.FUTURE),
-        (TestVersions.PAST, TestVersions.PAST),
-        (str(TestVersions.PAST), TestVersions.PAST),
-        (str(TestVersions.FUTURE), TestVersions.FUTURE),
+        (None, TestVersions.CURRENT, TestVersions.CURRENT),
+        (None, TestVersions.PAST, TestVersions.PAST),
+        (TestVersions.FUTURE, TestVersions.CURRENT, TestVersions.FUTURE),
+        (TestVersions.PAST, TestVersions.CURRENT, TestVersions.PAST),
+        (str(TestVersions.PAST), TestVersions.CURRENT, TestVersions.PAST),
+        (str(TestVersions.FUTURE), TestVersions.CURRENT, TestVersions.FUTURE),
     ],
 )
 def test_deprecator_parse_version(
-    deprecator: Deprecator, version: Version | str | None, expected_version: Version
+    deprecator: Deprecator,
+    version: Version | str | None,
+    fallback: Version,
+    expected_version: Version,
 ) -> None:
-    assert deprecator._parse_version(version) == expected_version
+    assert deprecator._parse_version(version, fallback=fallback) == expected_version
 
 
 def test_deprecator_repr() -> None:
